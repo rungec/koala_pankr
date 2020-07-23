@@ -1,4 +1,4 @@
-#This script thresholds spatial predictions of koala climate niche into high, medium and low suitability.
+#This script extracts threshold values for reclassifying spatial predictions of koala climate niche into high, medium and low suitability.
 #Climate data obtained from Briscoe 2016.
 #Koala occurrence records from Wildnet (Qld) and ALA (NSW)
 
@@ -59,11 +59,10 @@ thresholds <- climdflong %>% group_by(Model, Records) %>% summarise(
   perc80ofrecords = quantile(Suitability, prob=0.2),
   perc50ofrecords = quantile(Suitability, prob=0.5),
   perc10ofrecords = quantile(Suitability, prob=0.9))
-  
+
+thresholds <- thresholds %>% mutate(Tool = case_when(str_detect(Model, "mod") ~"Maxent",
+                  TRUE ~ "NicheMapper")) 
+thresholds <- thresholds %>% mutate(Scenario = case_when(Tool == "Maxent" ~ str_split(Model, "_")[[1]][2], 
+                  TRUE ~ paste0(str_split(Model, "_")[[1]][2:3], collapse="_")))
+
 write.csv(thresholds, "Output/Climate_thresholds.csv", row.names=FALSE)
-
-#Threshold rasters
-
-
-
-
