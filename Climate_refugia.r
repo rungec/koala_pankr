@@ -23,8 +23,7 @@ crs(maxestack) <- CRS("+init=epsg:4283")
 nichestack <- stack(list.files(paste0(climdir, "/NicheMapper"), ".tif", recursive = TRUE, full.names = TRUE))
 crs(nichestack) <- CRS("+init=epsg:4283")
 #crop the extent and snap cells to that of maxent rasters
-nichestack <- crop(nichestack, maxestack, snap='near')
-
+nichestack <- resample(nichestack, maxestack, method='ngb')
 
 #Threshold rasters
 reclassfun <- function(currstack, modtype, threshcol) {
@@ -58,22 +57,28 @@ reclassfun(nichestack, "NicheMapper", "perc50ofrecords")
 reclassfun(maxestack, "Maxent", "perc50ofrecords")
 
 #Combine the thresholded rasters to map refugia
-#make a list of the rasters (no_duplicates means threshold was defined based on spatially sampled occurrence records)
-rastlist <- as_tibble(list.files("Climrasters_thresholded/perc80ofrecords/", "No_duplicates", recursive = FALSE, full.names = FALSE))
-rastlist <- rastlist %>% mutate(Tool = str_split(value,"_")[[1]][1], 
-                                Time = case_when(str_detect(value, "2070") ~"2070",
-                                                 str_detect(value, "ACCESS") ~"2070",
-                                                 str_detect(value, "HadGEM2") ~"2070",
-                                                     TRUE ~ "Current"),
-                                Filename = paste0("Climrasters_thresholded/perc80ofrecords/", value))
+
+refugiaFun <- function(threshcol, currtime, dups){
+  rastlist <- list.files(paste0("Climrasters_thresholded/", threshcol, "/"), dups, recursive = FALSE, full.names = TRUE)
+  currstack <- raster::stack(rastlist)
+  currlist <- names(currstack) %>% as_tibble %>%  
+                          mutate(Time = case_when(str_detect(value, "2070") ~"2070",
+                                                           str_detect(value, "ACCESS") ~"2070",
+                                                           str_detect(value, "HadGEM2") ~"2070",
+                                                           TRUE ~ "Current")) %>% 
+                          filter(Time==currtime)
+  currstack <- currstack[[which(names(currstack) %in% currlist$value)]]
+  curroup <- sum(currstack)
+  writeRaster(curroup, filename=paste0("Climate_refugia/Refugia_", currtime, "_", threshcol, "_", dups,".tif"), format='GTiff', datatype='INT2S')
+} 
 
 #High suitability (80% of spatially sampled records fall within threshold)
-currlist <- rastlist %>% filter(Time==2070)
-highstack <- raster::stack(currlist$Filename)
-raster::calc(highstack, sum(na.rm = TRUE), filename="Climate_refugia/Refugia_high_suitability_nodups.tif", format='GTiff', datatype='INT2S')
-
+refugiaFun("perc80ofrecords", "2070", "No_duplicates")
+refugiaFun("perc80ofrecords", "Current", "No_duplicates")
 #Medium suitability (90% of spatially sampled records fall within threshold)
-
+refugiaFun("perc90ofrecords", "2070", "No_duplicates")
+refugiaFun("perc90ofrecords", "Current", "No_duplicates")
 #Low suitability (95% of spatially sampled records fall within threshold)
-
+refugiaFun("perc95ofrecords", "2070", "No_duplicates")
+refugiaFun("perc95ofrecords", "Current", "No_duplicates")
 
