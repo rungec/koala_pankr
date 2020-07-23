@@ -37,7 +37,7 @@ maxenodup <- maxedf[!duplicated(maxedf$cells), ]
 nichenodup <- nichedf[!duplicated(nichedf$cells), ]
 
 #merge and reformat
-climdf <- bind_rows(list("All records" = maxedf, "All records" = nichedf, "No duplicates" = maxenodup, "No duplicates" = nichenodup), .id="Records")
+climdf <- bind_rows(list("All_records" = maxedf, "All_records" = nichedf, "No_duplicates" = maxenodup, "No_duplicates" = nichenodup), .id="Records")
 climdflong <- pivot_longer(climdf, 4:ncol(climdf), names_to="Model", values_to="Suitability") %>% na.omit()
 
 #Plot
