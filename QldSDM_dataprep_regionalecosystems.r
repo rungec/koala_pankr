@@ -25,6 +25,7 @@ redd <- redd %>% mutate(Euc_present = case_when(str_detect(`Description`, "Eucal
                                                 TRUE ~ "Not"))
 #Load regional ecosystem mapping
 reveg <- st_read(dsn=paste0(REdir, 'koala.gdb'), layer='Regional_ecosystem_koala_noSEQ')
+reveg$oid <- 1:nrow(reveg)
 #a number of invalid geometries, lets fix them
 #reveg <- st_make_valid(reveg)
 
@@ -43,19 +44,19 @@ overlapkv <- st_intersects(currkb, reveg, sparse=TRUE)
 tb <- data.frame()
 for(i in 1:length(overlapkv)){
   currset <- overlapkv[[i]]
-  currveg <- st_drop_geometry(reveg[currset, c("RE_LABEL", "PC_LABEL", "SHAPE_Area")])
+  currveg <- st_drop_geometry(reveg[currset, c("oid", "RE_LABEL", "PC_LABEL", "SHAPE_Area")])
   currpt <- st_drop_geometry(currkb[i, c("OBJECTID", "START_DATE", "LATITUDE", "LONGITUDE")])
   currpt <- do.call("rbind", replicate(nrow(currveg), currpt, simplify = FALSE)) #repeat each row n times
   tb <- rbind(tb, cbind(currpt, currveg))
 }
 
 #Split out RE1 in format matching REDD table
-tb <- tb %>% mutate(RE1 = case_when(str_detect(RE_LABEL, "/") ~ str_split(RE_LABEL, "/")[[1]][1],
+tb <- tb %>% mutate(RE1 = case_when(str_detect(RE_LABEL, "/") ~ str_extract(RE_LABEL, "[^//]+"),
                                      TRUE ~ RE_LABEL))
 
 #number of polygons for each RE
 Num_RE_polys <- reveg %>% st_drop_geometry() %>% 
-            mutate(REfirst = case_when(str_detect(RE_LABEL, "/") ~ str_split(RE_LABEL, "/")[[1]][1],
+            mutate(REfirst = case_when(str_detect(RE_LABEL, "/") ~ str_extract(RE_LABEL, "[^//]+"),
                                        TRUE ~ RE_LABEL)) %>% 
             group_by(REfirst) %>% summarise(n_RE_polys = n())
 
@@ -63,11 +64,13 @@ Num_RE_polys <- reveg %>% st_drop_geometry() %>%
 #number of RE polygons with koala records
 #number of koala records in each RE
 summarytb <- tb %>% group_by(RE1) %>% summarise(n_koalaocc = n_distinct(OBJECTID),
-                                                        n_REpolys_withkoala = n()) 
+                                                        n_REpolys_withkoala = n_distinct(oid)) 
 
-#join summaries to the redd table, and output
+#join summaries to the redd table
 redd_oup <- left_join(redd, Num_RE_polys, by = c("re_id" = "REfirst"))
 redd_oup <- left_join(redd_oup, summarytb, by = c("re_id" = "RE1"))
+redd_oup <- redd_oup %>% mutate(perc_REpolys_withkoala = 100*n_REpolys_withkoala/n_RE_polys)
 
+#Save
 write_csv(redd_oup, "REDD_QldnoSEQ_summary_of_koala_occurrence.csv")
 
