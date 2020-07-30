@@ -26,7 +26,7 @@ redd <- redd %>% mutate(Euc_present = case_when(str_detect(`Description`, "Eucal
 #Load regional ecosystem mapping
 reveg <- st_read(dsn=paste0(REdir, 'koala.gdb'), layer='Regional_ecosystem_koala_noSEQ')
 #a number of invalid geometries, lets fix them
-reveg <- st_make_valid(reveg)
+#reveg <- st_make_valid(reveg)
 
 
 ############################
