@@ -6,7 +6,7 @@
 #################
 require(sf)
 require(tidyverse)
-require(raster)
+
 
 #Dirs
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output")
@@ -69,8 +69,14 @@ summarytb <- tb %>% group_by(RE1) %>% summarise(n_koalaocc = n_distinct(OBJECTID
 #join summaries to the redd table
 redd_oup <- left_join(redd, Num_RE_polys, by = c("re_id" = "REfirst"))
 redd_oup <- left_join(redd_oup, summarytb, by = c("re_id" = "RE1"))
-redd_oup <- redd_oup %>% mutate(perc_REpolys_withkoala = 100*n_REpolys_withkoala/n_RE_polys)
+redd_oup <- redd_oup %>% mutate(perc_REpolys_withkoala = 100*n_REpolys_withkoala/n_RE_polys) 
+                          
+#subset out the REs found in the study region #and that might be associated with koala
+redd_oup2 <- redd_oup %>% select(re_id, Description, Euc_present, n_RE_polys, n_koalaocc, n_REpolys_withkoala, perc_REpolys_withkoala ) %>% 
+                         # filter(n_RE_polys > 0 & Euc_present=='Euc' | n_koalaocc>0 )
+                          filter(n_RE_polys > 0 )
 
 #Save
 write_csv(redd_oup, "REDD_QldnoSEQ_summary_of_koala_occurrence.csv")
+write_csv(redd_oup2, "REDD_QldnoSEQ_summary_of_koala_occurrence_forexperts.csv")
 
