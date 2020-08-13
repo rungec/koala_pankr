@@ -15,8 +15,7 @@ oupdir <- "Gridded_data/"
 bbdir <- paste0(datadir, "Bioregions/koala_IBRA7/")
 waterdir <- paste0(datadir, "Barriers/Rivers/Aust/")
 firedir <- paste0(datadir, "Fire/National_fire_freq/ff_88to152.tif")
-climdir <- paste0(datadir, ....)
-  
+
 
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
@@ -33,6 +32,7 @@ bb <- st_transform(bb, 3577)
 if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))==FALSE){
   k_grid <- makegridfun(bb, cell_diameter) 
   save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
+  st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
 } else {
   load(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
 }
@@ -50,18 +50,21 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
     st_transform(3577) %>% #GDA94_Albers
     st_buffer(1000)
   
-  k_grid$current_koala <- lengths(st_intersects(k_grid, current_koala, sparse=FALSE))
-  k_grid$historic_koala <- lengths(st_intersects(k_grid, historic_koala, sparse=FALSE))
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
+                                 historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) %>% st_sf()
+
+    save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(current_koala)
   rm(historic_koala)
   
 #load and extract plant available water content
   k_grid <- k_grid %>% st_transform(4283) #GDA94
   
-  pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', aoi=bb) 
-  k_grid$pawc_mean <- raster::extract(pawc, k_grid, fun='mean', na.rm=TRUE)
-  k_grid$pawc_max <- raster::extract(pawc, k_grid, fun='max', na.rm=TRUE)
+  pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) 
+  pawc_mean <- raster::extract(pawc, k_grid, fun=mean, na.rm=TRUE)
+  pawc_max <- raster::extract(pawc, k_grid, fun=max, na.rm=TRUE)
+  k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max) %>% st_sf()
+
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(pawc)
   
@@ -85,6 +88,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   k_grid$permanent_water <- lengths(st_intersects(k_grid, water))
   k_grid$dist2water <- st_distance(k_grid, st_combine(water))
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
   rm(water)
   
   } else {
@@ -100,7 +104,8 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE)) 
   #1=50% 2=80% 3=90% 4=95%
   clim_data <- raster::extract(climstack, k_grid, weights=TRUE, fun='mean', na.rm=TRUE)
- head(clim_data)
+ 
+  head(clim_data)
   k_grid <- k_grid %>% bind_cols(climdata)
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
