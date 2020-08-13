@@ -3,9 +3,10 @@
 
 #################
 library(sf)
+library(tidyverse)
 library(raster)
 library(slga) #for download of Soil and Landscape Grid of Australia https://www.clw.csiro.au/aclep/soilandlandscapegrid/GetData-R_package.html
-library(tidyverse)
+library(lwgeom)
 
 
 #Dirs & file locations
@@ -15,9 +16,10 @@ oupdir <- "Gridded_data/"
 bbdir <- paste0(datadir, "Bioregions/koala_IBRA7/")
 waterdir <- paste0(datadir, "Barriers/Rivers/Aust/")
 firedir <- paste0(datadir, "Fire/National_fire_freq/ff_88to152.tif")
+pawcdir <- paste0(datadir, "Soil/PAWC_1m/PAWC_1m/pawc_1m")
 
 
-source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
+#source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
 
 cell_diameter = 1000 #metres
@@ -58,38 +60,60 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   rm(historic_koala)
   
 #load and extract plant available water content
-  k_grid <- k_grid %>% st_transform(4283) #GDA94
-  
-  pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) 
+
+  pawc <- raster(pawcdir) #250m res, mm/m for top 1m
+  #pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) #90m res and need to download each depth and sum
   pawc_mean <- raster::extract(pawc, k_grid, fun=mean, na.rm=TRUE)
   pawc_max <- raster::extract(pawc, k_grid, fun=max, na.rm=TRUE)
+  k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
   k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max) %>% st_sf()
 
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(pawc)
+  rm(pawc_max)
+  rm(pawc_mean)
   
 #load and extract soil depth
-  soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', aoi=bb) 
-  k_grid$soildepth_mean <- raster::extract(soildepth, k_grid, fun='mean', na.rm=TRUE)
-  k_grid$soildepth_max <- raster::extract(soildepth, k_grid, fun='max', na.rm=TRUE)
+  k_grid <- k_grid %>% st_transform(4283) #GDA94
+  soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', depth=1, aoi=k_grid) 
+  
+  soildepth_mean <- raster::extract(soildepth, k_grid, fun=mean, na.rm=TRUE)
+  soildepth_max <- raster::extract(soildepth, k_grid, fun=max, na.rm=TRUE)
+  k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max) %>% st_sf()
+  
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(soildepth)
+  rm(soildepth_mean)
+  rm(soildepth_max)
   
 #load and extract bushfire freq
-  k_grid <- k_grid %>% st_transform(4326) #WGS84
   firefreq <- raster(firedir)
-  k_grid$firefreq_88to15 <- raster::extract(firefreq, k_grid, fun='max', na.rm=TRUE)
+  k_grid <- k_grid %>% st_transform(st_crs(firefreq)) #WGS84
+  firefreq_88to15 <- raster::extract(firefreq, k_grid, fun=max, na.rm=TRUE)
+  k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15) %>% st_sf()
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  rm(firefreq)
+  rm(firefreq_88to15)
   
 #load and extract permanent water
-  k_grid <- k_grid %>% st_transform(4283) #GDA94
-  water <- st_read(paste0(waterdir, "SurfaceHydrologyPolygonsNational.gdb"))
-  water <- water %>% filter(PERENNIALITY=='Perennial')
-  k_grid$permanent_water <- lengths(st_intersects(k_grid, water))
-  k_grid$dist2water <- st_distance(k_grid, st_combine(water))
+ water <- st_read(paste0(waterdir, "SurfaceHydrologyPolygonsNational.gdb")) %>% 
+              filter(PERENNIALITY=='Perennial') %>% st_transform(3577)
+
+  
+  k_grid <- k_grid %>% st_transform(st_crs(water))  
+  w1 <- st_intersection(k_grid, water) %>% st_area()
+  
+  water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve.shp")) %>% 
+    st_transform(3577)
+  w2 <- st_distance(k_grid, water)
+  
+  k_grid<- k_grid %>% bind_cols(permanent_water_area = w1, dist2water = w2) %>% st_sf()
+  
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
   rm(water)
+  rm(w1)
+  rm(w2)
   
   } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -103,12 +127,13 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   #climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE))
   climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE)) 
   #1=50% 2=80% 3=90% 4=95%
-  clim_data <- raster::extract(climstack, k_grid, weights=TRUE, fun='mean', na.rm=TRUE)
+  clim_data <- raster::extract(climstack, k_grid, weights=TRUE, fun=mean, na.rm=TRUE)
+  clim_data <- data.frame(clim_data)
  
-  head(clim_data)
-  k_grid <- k_grid %>% bind_cols(climdata)
+  k_grid <- k_grid %>% bind_cols(clim_data) %>% st_sf()
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
+  #st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
 } else {
   load(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
 }
