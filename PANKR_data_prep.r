@@ -52,7 +52,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
     st_transform(3577) %>% #GDA94_Albers
     st_buffer(1000)
   
-  k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
+  k_grid <- k_grid %>% bind_cols(cellid = c(1:nrow(k_grid)), current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) %>% st_sf()
 
     save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -96,24 +96,37 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   rm(firefreq_88to15)
   
 #load and extract permanent water
- water <- st_read(paste0(waterdir, "SurfaceHydrologyPolygonsNational.gdb")) %>% 
-              filter(PERENNIALITY=='Perennial') %>% st_transform(3577)
-
+ #water <- st_read(paste0(waterdir, "SurfaceHydrologyPolygonsNational.gdb")) %>% 
+ #             filter(PERENNIALITY=='Perennial') %>% st_transform(3577)
+##fix geometry 
+ # water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala.shp")) %>% 
+ #   st_transform(3577)
+  #water1 <- st_buffer(water, dist=0)
+  #st_write(water1, paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp"), driver='ESRI Shapefile') 
+ 
+  water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp")) %>% 
+    st_transform(3577) 
+  k_grid <- k_grid %>% st_transform(st_crs(water))
   
-  k_grid <- k_grid %>% st_transform(st_crs(water))  
-  w1 <- st_intersection(k_grid, water) %>% st_area()
-  
-  water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve.shp")) %>% 
-    st_transform(3577)
-  w2 <- st_distance(k_grid, water)
-  
-  k_grid<- k_grid %>% bind_cols(permanent_water_area = w1, dist2water = w2) %>% st_sf()
-  
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
-  st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
-  rm(water)
-  rm(w1)
-  rm(w2)
+  #area of permanent water in cell
+  w1 <- st_intersection(k_grid, water) %>% 
+    mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000) %>% 
+             dplyr::select(cellid, permanent_water_area_ha) %>% as_tibble()
+           
+           #distance to water
+           w2 <- st_distance(k_grid, water)
+           
+           #join back to dataset
+           k_grid<- k_grid %>% bind_cols(dist2water = w2) %>% 
+             left_join(w1, by='cellid') %>% 
+             mutate(permanent_water_area_ha = case_when(is.na(permanent_water_area_ha) ~ 0, 
+                                                        TRUE ~ permanent_water_area_ha)) %>% st_sf()
+           
+           save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+           st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+           rm(water)
+           rm(w1)
+           rm(w2)
   
   } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
