@@ -110,7 +110,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   
   #area of permanent water in cell
   w1 <- st_intersection(k_grid, water) %>% 
-    mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000) %>% 
+    mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000)) %>% 
              dplyr::select(cellid, permanent_water_area_ha) %>% as_tibble()
            
            #distance to water
@@ -179,21 +179,42 @@ head(k_grid)
 ######################
 #Extract habitat data
 ######################
-regions <- st_read(bbdir, "IBRA7_regions_states_koala.shp")
+#regions <- st_read(paste0(bbdir, "IBRA7_koala_management_regions.shp"))
+lookup <- read.csv(paste0(oupdir, "habitatfilelist.csv"))
 
-if()
-  k_nsw <- extracthabitat(k_vars_clim, ,) 
-  k_
+#allocate each 
+
+for(i %in% 1:nrow(lookup)){
+  curregion <- lookup$Shortname[i]
   
-  
-  
-  paste0("koala_gridded_vars_", curregion, cell_diameter,"_m.Rdata"))
-  
-  
-  
-  #check
-  head(k_all)
-  save(k_all, file = paste0("koala_gridded_allvars__m.Rdata"))
+  if(lookup$state[i])=='NSW'){
+    
+    curr_rast <- raster(list.files(paste0(datadir, "lookup$Filename[i]"), pattern=".tif$", recursive=TRUE, full.names=TRUE))
+    #proportion of polygon that is not classed as no data
+    prop_habitat <- raster::extract(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))/length(x)) 
+    setNames(prop_habitat, paste(curregion, "prop_habitat", sep="_"))
+    #mean suitability of cells 
+    habitat_suitability <- raster::extract(curr_rast, k_grid, fun=mean, na.rm=TRUE) 
+    setNames(habitat_suitability, paste(curregion, "habitat_suitability", sep="_"))
+    
+    k_grid<- k_grid %>% bind_cols(prop_habitat, habitat_suitability) %>% st_sf()
+    
+  } else {
+    
+    
+    st_intersection(k_grid, curr_shp) %>% 
+      mutate(habitat_area = as.numeric(st_area(.)/10000)) %>% 
+      dplyr::select(cellid, habitat_area ) %>% as_tibble()
+    
+    
+    
+    k_grid <- k_grid %>% bind_cols(prop_habitat, habitat_suitability) %>% st_sf()
+    
+  }
+
+save(k_grid, file = paste0(oupdir, "koala_gridded_habitat", curregion, cell_diameter,"_m.Rdata"))    
+}
+
 ###END
 
 
