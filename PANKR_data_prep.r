@@ -127,13 +127,37 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   #climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE))
   climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE)) 
   #1=50% 2=80% 3=90% 4=95%
+
+  #shorten the names of each model
+  climnames <- names(climstack) %>% as_tibble %>%  
+    mutate(Model = case_when(str_detect(value, "Maxent") ~"Mx",
+                             TRUE ~"Nm"),
+           Scenario = case_when(str_detect(value, "average") ~ "av", 
+                                str_detect(value, "extremesA") ~ "eA", 
+                                str_detect(value, "extremesB") ~ "eB", 
+                                str_detect(value, "low") ~ "lo", 
+                                str_detect(value, "med") ~ "me",
+                                TRUE ~ "hi"),
+           Time = case_when(str_detect(value, "Acc70") ~"AC70",
+                            str_detect(value, "ACCESS") ~"AC70",
+                            str_detect(value, "HadGEM2") ~"HG70",
+                            str_detect(value, "Had70") ~"HG70",
+                            TRUE ~ "Curr"),
+           Threshold = case_when(str_detect(value, "1$") ~ "50", 
+                                 str_detect(value, "2$") ~ "80",
+                                 str_detect(value, "3$") ~ "90",
+                                 TRUE ~ "95")) %>%
+    mutate(new_name = paste(Model, Scenario, Time, Threshold, sep="_"))
+  
+  names(climstack) <- climnames$new_name
+  
   clim_data <- raster::extract(climstack, k_grid, weights=TRUE, fun=mean, na.rm=TRUE)
   clim_data <- data.frame(clim_data)
- 
+  
   k_grid <- k_grid %>% bind_cols(clim_data) %>% st_sf()
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
-  #st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+  st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
 } else {
   load(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
 }
