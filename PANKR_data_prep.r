@@ -33,6 +33,7 @@ bb <- st_transform(bb, 3577)
 #make hexagons
 if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))==FALSE){
   k_grid <- makegridfun(bb, cell_diameter) 
+  k_grid <- k_grid %>% bind_cols(cellid = c(1:nrow(k_grid))) %>% st_sf()
   save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
   st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
 } else {
@@ -52,7 +53,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
     st_transform(3577) %>% #GDA94_Albers
     st_buffer(1000)
   
-  k_grid <- k_grid %>% bind_cols(cellid = c(1:nrow(k_grid)), current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
+  k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) %>% st_sf()
 
     save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -180,35 +181,55 @@ head(k_grid)
 #Extract habitat data
 ######################
 #regions <- st_read(paste0(bbdir, "IBRA7_koala_management_regions.shp"))
-lookup <- read.csv(paste0(oupdir, "habitatfilelist.csv"))
+lookup <- read.csv(paste0("habitatfilelist.csv"))
+k_grid <- k_grid %>% st_transform(3577) #GDA94 albers 
 
-#allocate each 
+#for each region, we calculate the area of koala habitat in each grid cell, and the quality of the koala habtiat in each grid cell.
+#quality is not comparable across regions
+#we then add those two columns for each region to k_grid.
 
-for(i %in% 1:nrow(lookup)){
+for(i in 1:nrow(lookup)){
   curregion <- lookup$Shortname[i]
   
-  if(lookup$state[i])=='NSW'){
+  if(lookup$state[i]=='NSW'){
+
+    curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
+    k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
+    #area of polygon that is not classed as no data
+    habitat_area_ha <- raster::extract(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))*(res(curr_rast))^2/10000) 
     
-    curr_rast <- raster(list.files(paste0(datadir, "lookup$Filename[i]"), pattern=".tif$", recursive=TRUE, full.names=TRUE))
-    #proportion of polygon that is not classed as no data
-    prop_habitat <- raster::extract(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))/length(x)) 
-    setNames(prop_habitat, paste(curregion, "prop_habitat", sep="_"))
     #mean suitability of cells 
-    habitat_suitability <- raster::extract(curr_rast, k_grid, fun=mean, na.rm=TRUE) 
-    setNames(habitat_suitability, paste(curregion, "habitat_suitability", sep="_"))
+    habitat_rank_mean <- raster::extract(curr_rast, k_grid, fun=mean, na.rm=TRUE) 
     
-    k_grid<- k_grid %>% bind_cols(prop_habitat, habitat_suitability) %>% st_sf()
+    setNames(habitat_area_ha, paste("habitat_area_ha", curregion, sep="_"))
+    setNames(habitat_rank_mean, paste("habitat_rank_mean", curregion, sep="_"))
     
-  } else {
+    #here we don't need  a left_join because raster extract keeps a row for each cellid in k_grid
+    k_grid <- k_grid %>% bind_cols(habitat_area_ha, habitat_rank_mean) %>% st_sf()
+    
+  } else if (lookup$state[i]=='SEQ'){
+    
+    #we use the HSM categories 4:10 (low-high quality habitat, see documentation)
+    curr_shp <- st_read(paste0(datadir, lookup$Filename[i])) %>% 
+                  st_transform(3577) %>% 
+                  group_by(HSM_CATEGO) %>% 
+                  summarise(area = sum(AREA_HA))
+
+    habitat <- st_intersection(k_grid, curr_shp) %>% 
+                  mutate(habitat_area_ha = as.numeric(st_area(.)/10000),
+                          habitat_rank_mean = mean(HSM_CATEGO, na.rm=TRUE)) %>% 
+                  dplyr::select(cellid, habitat_area_ha, habitat_rank_mean ) %>% 
+                  as_tibble()
+    
+    setNames(habitat, paste(names(habitat)[2:3], curregion, sep="_"))
+   
+    k_grid <- k_grid %>% left_join(habitat, by='cellid') %>% st_sf()
+    
+  } else if (lookup$state[i]=='QLD'){
     
     
-    st_intersection(k_grid, curr_shp) %>% 
-      mutate(habitat_area = as.numeric(st_area(.)/10000)) %>% 
-      dplyr::select(cellid, habitat_area ) %>% as_tibble()
     
     
-    
-    k_grid <- k_grid %>% bind_cols(prop_habitat, habitat_suitability) %>% st_sf()
     
   }
 
