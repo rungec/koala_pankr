@@ -26,7 +26,7 @@ source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/st_parallel.r"))
 
 cell_diameter = 1000 #metres
-ncore = 8 #EDIT ME #put 0 if don't want to run in parallel
+ncore = 8 #EDIT number of cores to use for parallel #put 1 if don't want to run in parallel
 
 ######################
 #load study region and project to GDA_94 Aust Albers EPSG 3577 which has units in m
@@ -68,8 +68,8 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   pawc <- raster(pawcdir) #250m res, mm/m for top 1m
   #pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) #90m res and need to download each depth and sum
   k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
-  pawc_mean <- rast_parallel(pawc, k_grid, fun=mean, na.rm=TRUE, n_core = ncore)
-  pawc_max <- rast_parallel(pawc, k_grid, fun=max, na.rm=TRUE, n_core = ncore)
+  pawc_mean <- rast_parallel(pawc, k_grid, fun=mean, na.rm=TRUE, n_cores = ncore)
+  pawc_max <- rast_parallel(pawc, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max)
 
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -81,8 +81,8 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   k_grid <- k_grid %>% st_transform(4283) #GDA94
   soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', depth=1, aoi=k_grid) 
   
-  soildepth_mean <- rast_parallel(soildepth, k_grid, fun=mean, na.rm=TRUE, n_core = ncore)
-  soildepth_max <- rast_parallel(soildepth, k_grid, fun=max, na.rm=TRUE, n_core = ncore)
+  soildepth_mean <- rast_parallel(soildepth, k_grid, fun=mean, na.rm=TRUE, n_cores = ncore)
+  soildepth_max <- rast_parallel(soildepth, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max)
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -93,7 +93,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
 #load and extract bushfire freq
   firerast <- raster(firedir)
   k_grid <- k_grid %>% st_transform(st_crs(firerast)) #WGS84
-  firefreq_88to15 <- rast_parallel(firerast, k_grid, fun=max, na.rm=TRUE, n_core = ncore)
+  firefreq_88to15 <- rast_parallel(firerast, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15)
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(firefreq)
@@ -115,14 +115,14 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   #area of permanent water in cell
   #because water is dissolved into a single, multipart polygon we get one row for every cell that overlaps water
   
-  w1 <- st_intersection(k_grid, water) %>% 
-  #w1 <- st_parallel(k_grid, st_intersection, ncores, y = water) %>% 
+  #w1 <- st_intersection(k_grid, water) %>% 
+  w1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = water) %>% 
     mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
              dplyr::select(cellid, permanent_water_area_ha) 
            
  #distance to water
-  w2 <- st_distance(k_grid, water)
-  #w2 <- st_parallel(k_grid, st_distance, ncores, y = water)
+  #w2 <- st_distance(k_grid, water)
+  w2 <- st_parallel(k_grid, st_distance, n_cores = ncore, y = water)
 
  #join back to dataset
  k_grid<- k_grid %>% bind_cols(dist2water = w2) %>% 
@@ -145,7 +145,6 @@ head(k_grid)
 #Extract climate data
 ######################
 if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==FALSE){
-  #climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE))
   climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE)) 
   #1=50% 2=80% 3=90% 4=95%
 
@@ -172,7 +171,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   
   names(climstack) <- climnames$new_name
   
-  clim_data <- rast_parallel(climstack, k_grid, weights=TRUE, fun=mean, na.rm=TRUE, n_core = ncore)
+  clim_data <- rast_parallel(climstack, k_grid, weights=TRUE, fun=mean, na.rm=TRUE, n_cores = ncore)
   clim_data <- data.frame(clim_data)
   
   k_grid <- k_grid %>% bind_cols(clim_data)
@@ -207,10 +206,10 @@ for(i in 1:nrow(lookup)){
     curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
     k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
     #area of polygon that is not classed as no data
-    habitat_area_ha <- rast_parallel(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, n_core = ncore) 
+    habitat_area_ha <- rast_parallel(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, n_cores = ncore) 
 
     #mean suitability of cells 
-    habitat_rank_mean <- rast_parallel(curr_rast, k_grid, fun=mean, na.rm=TRUE, n_core = ncore) 
+    habitat_rank_mean <- rast_parallel(curr_rast, k_grid, fun=mean, na.rm=TRUE, n_cores = ncore) 
     
     habitat <- data.frame(habitat_area_ha, habitat_rank_mean)
     habitat <- setNames(habitat, paste(names(habitat), curregion, sep="_"))
@@ -232,8 +231,8 @@ for(i in 1:nrow(lookup)){
                   group_by(HSM_CATEGO) %>% 
                   summarise(area = sum(AREA_HA))
 
-    habitat <- st_intersection(k_grid, curr_shp) %>% 
-    #habitat <- st_parallel(k_grid, st_intersection, ncores, y = curr_shp) %>% 
+    #habitat <- st_intersection(k_grid, curr_shp) %>% 
+    habitat <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = curr_shp) %>% 
       mutate(area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
       group_by(cellid) %>% 
       summarise(habitat_area_ha = sum(area_ha),
