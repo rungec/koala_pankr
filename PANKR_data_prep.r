@@ -48,10 +48,10 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
 #load and extract koala occurrence
   current_koala <- st_read(paste0(datadir, "Occurrence records"), "Koala_Qld_NSW_merge_2000on_1kmres_noDup") %>% 
     st_transform(3577) %>%
-    st_buffer(1000)
+    st_buffer(1000) %>% st_geometry()
   historic_koala  <- st_read(paste0(datadir, "Occurrence records"), "Koala_Qld_NSW_merge_1970to2000_1kmres_noDup") %>% 
     st_transform(3577) %>% #GDA94_Albers
-    st_buffer(1000)
+    st_buffer(1000) %>% st_geometry()
   
   k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) 
@@ -106,7 +106,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   #st_write(water1, paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp"), driver='ESRI Shapefile') 
  
   water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp")) %>% 
-    st_transform(3577) 
+    st_transform(3577) %>% st_geometry()
   k_grid <- k_grid %>% st_transform(st_crs(water))
   
   #area of permanent water in cell
@@ -226,7 +226,6 @@ for(i in 1:nrow(lookup)){
                   group_by(HSM_CATEGO) %>% 
                   summarise(area = sum(AREA_HA))
 
-    
     habitat <- st_intersection(k_grid, curr_shp) %>% 
       mutate(area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
       group_by(cellid) %>% 
