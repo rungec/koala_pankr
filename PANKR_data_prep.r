@@ -1,4 +1,5 @@
-#this script extracts landscape values and runs clustering
+#this script extracts landscape values for clustering
+#tested using R version 4.0.2
 
 
 #################
@@ -33,7 +34,6 @@ bb <- st_transform(bb, 3577)
 #make hexagons
 if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))==FALSE){
   k_grid <- makegridfun(bb, cell_diameter) 
-  k_grid <- k_grid %>% bind_cols(cellid = c(1:nrow(k_grid))) %>% st_sf()
   save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
   st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
 } else {
@@ -54,9 +54,9 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
     st_buffer(1000)
   
   k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
-                                 historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) %>% st_sf()
+                                 historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) 
 
-    save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(current_koala)
   rm(historic_koala)
   
@@ -64,10 +64,10 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
 
   pawc <- raster(pawcdir) #250m res, mm/m for top 1m
   #pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) #90m res and need to download each depth and sum
+  k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
   pawc_mean <- raster::extract(pawc, k_grid, fun=mean, na.rm=TRUE)
   pawc_max <- raster::extract(pawc, k_grid, fun=max, na.rm=TRUE)
-  k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
-  k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max) %>% st_sf()
+  k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max)
 
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(pawc)
@@ -80,7 +80,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   
   soildepth_mean <- raster::extract(soildepth, k_grid, fun=mean, na.rm=TRUE)
   soildepth_max <- raster::extract(soildepth, k_grid, fun=max, na.rm=TRUE)
-  k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max) %>% st_sf()
+  k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max)
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(soildepth)
@@ -88,10 +88,10 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   rm(soildepth_max)
   
 #load and extract bushfire freq
-  firefreq <- raster(firedir)
-  k_grid <- k_grid %>% st_transform(st_crs(firefreq)) #WGS84
-  firefreq_88to15 <- raster::extract(firefreq, k_grid, fun=max, na.rm=TRUE)
-  k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15) %>% st_sf()
+  firerast <- raster(firedir)
+  k_grid <- k_grid %>% st_transform(st_crs(firerast)) #WGS84
+  firefreq_88to15 <- raster::extract(firerast, k_grid, fun=max, na.rm=TRUE)
+  k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15)
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
   rm(firefreq)
   rm(firefreq_88to15)
@@ -110,24 +110,25 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   k_grid <- k_grid %>% st_transform(st_crs(water))
   
   #area of permanent water in cell
+  #because water is dissolved into a single, multipart polygon we get one row for every cell that overlaps water
   w1 <- st_intersection(k_grid, water) %>% 
-    mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000)) %>% 
-             dplyr::select(cellid, permanent_water_area_ha) %>% as_tibble()
+    mutate(permanent_water_area_ha= as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+             dplyr::select(cellid, permanent_water_area_ha) 
            
-           #distance to water
-           w2 <- st_distance(k_grid, water)
-           
-           #join back to dataset
-           k_grid<- k_grid %>% bind_cols(dist2water = w2) %>% 
-             left_join(w1, by='cellid') %>% 
-             mutate(permanent_water_area_ha = case_when(is.na(permanent_water_area_ha) ~ 0, 
-                                                        TRUE ~ permanent_water_area_ha)) %>% st_sf()
-           
-           save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
-           st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
-           rm(water)
-           rm(w1)
-           rm(w2)
+ #distance to water
+  w2 <- st_distance(k_grid, water)
+
+ #join back to dataset
+ k_grid<- k_grid %>% bind_cols(dist2water = w2) %>% 
+   left_join(w1, by='cellid') %>% 
+   mutate(permanent_water_area_ha = case_when(is.na(permanent_water_area_ha) ~ 0, 
+                                              TRUE ~ permanent_water_area_ha))
+ 
+ save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+ st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+ rm(water)
+ rm(w1)
+ rm(w2)
   
   } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
@@ -168,10 +169,14 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   clim_data <- raster::extract(climstack, k_grid, weights=TRUE, fun=mean, na.rm=TRUE)
   clim_data <- data.frame(clim_data)
   
-  k_grid <- k_grid %>% bind_cols(clim_data) %>% st_sf()
+  k_grid <- k_grid %>% bind_cols(clim_data)
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
   st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+  rm(climnames)
+  rm(climstack)
+  rm(clim_data)
+  
 } else {
   load(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
 }
@@ -196,17 +201,23 @@ for(i in 1:nrow(lookup)){
     curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
     k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
     #area of polygon that is not classed as no data
-    habitat_area_ha <- raster::extract(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))*(res(curr_rast))^2/10000) 
-    
+    habitat_area_ha <- raster::extract(curr_rast, k_grid, fun=function(x, ...)length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000) 
+
     #mean suitability of cells 
     habitat_rank_mean <- raster::extract(curr_rast, k_grid, fun=mean, na.rm=TRUE) 
     
-    setNames(habitat_area_ha, paste("habitat_area_ha", curregion, sep="_"))
-    setNames(habitat_rank_mean, paste("habitat_rank_mean", curregion, sep="_"))
-    
+    habitat <- data.frame(habitat_area_ha, habitat_rank_mean)
+    habitat <- setNames(habitat, paste(names(habitat), curregion, sep="_"))
+   
     #here we don't need  a left_join because raster extract keeps a row for each cellid in k_grid
-    k_grid <- k_grid %>% bind_cols(habitat_area_ha, habitat_rank_mean) %>% st_sf()
+    k_grid <- k_grid %>% bind_cols(habitat)
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_diameter,"_m.Rdata"))
     
+    rm(curr_rast)
+    rm(habitat)
+    rm(habitat_rank_mean)
+    rm(habitat_area_ha)
+        
   } else if (lookup$state[i]=='SEQ'){
     
     #we use the HSM categories 4:10 (low-high quality habitat, see documentation)
@@ -215,16 +226,22 @@ for(i in 1:nrow(lookup)){
                   group_by(HSM_CATEGO) %>% 
                   summarise(area = sum(AREA_HA))
 
+    
     habitat <- st_intersection(k_grid, curr_shp) %>% 
-                  mutate(habitat_area_ha = as.numeric(st_area(.)/10000),
-                          habitat_rank_mean = mean(HSM_CATEGO, na.rm=TRUE)) %>% 
-                  dplyr::select(cellid, habitat_area_ha, habitat_rank_mean ) %>% 
-                  as_tibble()
+      mutate(area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+      group_by(cellid) %>% 
+      summarise(habitat_area_ha = sum(area_ha),
+                habitat_rank_mean = sum(HSM_CATEGO*area_ha)/sum(area_ha)) %>% 
+      dplyr::select(cellid, habitat_area_ha, habitat_rank_mean )
     
-    setNames(habitat, paste(names(habitat)[2:3], curregion, sep="_"))
-   
+    habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2:3], curregion, sep="_")))
+    
     k_grid <- k_grid %>% left_join(habitat, by='cellid') %>% st_sf()
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_diameter,"_m.Rdata"))
     
+    rm(curr_rast)
+    rm(habitat)
+
   } else if (lookup$state[i]=='QLD'){
     
     
