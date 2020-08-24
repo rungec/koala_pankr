@@ -25,7 +25,7 @@ pawcdir <- paste0(datadir, "Soil/PAWC_1m/PAWC_1m/pawc_1m")
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/st_parallel.r"))
 
-cell_diameter = 1000 #metres
+cell_area = "10_ha" 
 ncore = 8 #EDIT number of cores to use for parallel #put 1 if don't want to run in parallel
 
 ######################
@@ -35,18 +35,19 @@ bb <- st_read(paste0(bbdir, "IBRA7_regions_states_koala_dissolve.shp"))
 bb <- st_transform(bb, 3577)
 
 #make hexagons
-if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))==FALSE){
-  k_grid <- makegridfun(bb, cell_diameter) 
-  save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
-  st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))==FALSE){
+  k_grid <- makegridfun(bb, currsize=1000) 
+  save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
+  st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_area,"_m.shp"), driver='ESRI Shapefile')
 } else {
-  load(paste0(oupdir, "koala_templatehexgrid_",cell_diameter,"_m.Rdata"))
+  load(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
 }
 
 ######################
 ##Extract attributes for datasets that span the whole study region
 ######################
-if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==FALSE){
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE){
+  print(paste0("Starting koala occurrences ", Sys.time()))
   
 #load and extract koala occurrence
   current_koala <- st_read(paste0(datadir, "Occurrence records"), "Koala_Qld_NSW_merge_2000on_1kmres_noDup") %>% 
@@ -59,12 +60,12 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) 
 
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
   rm(current_koala)
   rm(historic_koala)
   
 #load and extract plant available water content
-
+  print(paste0("Starting PAWC ", Sys.time()))
   pawc <- raster(pawcdir) #250m res, mm/m for top 1m
   #pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) #90m res and need to download each depth and sum
   k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
@@ -72,12 +73,13 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   pawc_max <- rast_parallel(pawc, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max)
 
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
   rm(pawc)
   rm(pawc_max)
   rm(pawc_mean)
   
 #load and extract soil depth
+  print(paste0("Starting soil depth ", Sys.time()))
   k_grid <- k_grid %>% st_transform(4283) #GDA94
   soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', depth=1, aoi=k_grid) 
   
@@ -85,17 +87,18 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
   soildepth_max <- rast_parallel(soildepth, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max)
   
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
   rm(soildepth)
   rm(soildepth_mean)
   rm(soildepth_max)
   
 #load and extract bushfire freq
+  print(paste0("Starting bushfire freq ", Sys.time()))
   firerast <- raster(firedir)
   k_grid <- k_grid %>% st_transform(st_crs(firerast)) #WGS84
   firefreq_88to15 <- rast_parallel(firerast, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15)
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
   rm(firefreq)
   rm(firefreq_88to15)
   
@@ -107,7 +110,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
  #   st_transform(3577)
   #water1 <- st_buffer(water, dist=0)
   #st_write(water1, paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp"), driver='ESRI Shapefile') 
- 
+  print(paste0("Starting perennial water ", Sys.time())) 
   water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp")) %>% 
     st_transform(3577) %>% st_geometry()
   k_grid <- k_grid %>% st_transform(st_crs(water))
@@ -121,6 +124,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
              dplyr::select(cellid, permanent_water_area_ha) 
            
  #distance to water
+  print(paste0("Starting distance to water ", Sys.time()))
   #w2 <- st_distance(k_grid, water)
   w2 <- st_parallel(k_grid, st_distance, n_cores = ncore, y = water)
 
@@ -130,22 +134,23 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))==
    mutate(permanent_water_area_ha = case_when(is.na(permanent_water_area_ha) ~ 0, 
                                               TRUE ~ permanent_water_area_ha))
  
- save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
- st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+ save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+ st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"_m.shp"), driver='ESRI Shapefile')
  rm(water)
  rm(w1)
  rm(w2)
   
   } else {
-  load(paste0(oupdir, "koala_gridded_data_",cell_diameter,"_m.Rdata"))
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
 }
 head(k_grid)
 
 ######################
 #Extract climate data
 ######################
-if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==FALSE){
-  climstack <- stack(list.files("Climrasters_thresholded", pattern="No_duplicates", recursive = TRUE, full.names = TRUE)) 
+if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE){
+  print(paste0("Starting climate ", Sys.time()))
+  climstack <- stack(list.files("Climrasters_thresholded/nothreshold", recursive = TRUE, full.names = TRUE)) 
   #1=50% 2=80% 3=90% 4=95%
 
   #shorten the names of each model
@@ -162,12 +167,13 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
                             str_detect(value, "ACCESS") ~"AC70",
                             str_detect(value, "HadGEM2") ~"HG70",
                             str_detect(value, "Had70") ~"HG70",
-                            TRUE ~ "Curr"),
-           Threshold = case_when(str_detect(value, "1$") ~ "50", 
-                                 str_detect(value, "2$") ~ "80",
-                                 str_detect(value, "3$") ~ "90",
-                                 TRUE ~ "95")) %>%
-    mutate(new_name = paste(Model, Scenario, Time, Threshold, sep="_"))
+                            TRUE ~ "Curr")) %>%
+           #mutate(Threshold = case_when(str_detect(value, "1$") ~ "50", 
+                #                 str_detect(value, "2$") ~ "80",
+                #                 str_detect(value, "3$") ~ "90",
+                 #                TRUE ~ "95")) %>%
+    #mutate(new_name = paste(Model, Scenario, Time, Threshold, sep="_"))
+    mutate(new_name = paste(Model, Scenario, Time, sep="_"))
   
   names(climstack) <- climnames$new_name
   
@@ -176,14 +182,14 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))==
   
   k_grid <- k_grid %>% bind_cols(clim_data)
   
-  save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
-  st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.shp"), driver='ESRI Shapefile')
+  save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))
+  st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_area,"_m.shp"), driver='ESRI Shapefile')
   rm(climnames)
   rm(climstack)
   rm(clim_data)
   
 } else {
-  load(paste0(oupdir, "koala_gridded_clim_",cell_diameter,"_m.Rdata"))
+  load(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))
 }
 head(k_grid)
 
@@ -191,6 +197,7 @@ head(k_grid)
 #Extract habitat data
 ######################
 #regions <- st_read(paste0(bbdir, "IBRA7_koala_management_regions.shp"))
+print(paste0("Starting habitat ", Sys.time()))
 lookup <- read.csv(paste0("habitatfilelist.csv"))
 k_grid <- k_grid %>% st_transform(3577) #GDA94 albers 
 
@@ -200,6 +207,7 @@ k_grid <- k_grid %>% st_transform(3577) #GDA94 albers
 
 for(i in 1:nrow(lookup)){
   curregion <- lookup$Shortname[i]
+  print(paste0("Starting habitat ", curregion, " ", Sys.time()))
   
   if(lookup$state[i]=='NSW'){
 
@@ -216,7 +224,7 @@ for(i in 1:nrow(lookup)){
    
     #here we don't need  a left_join because raster extract keeps a row for each cellid in k_grid
     k_grid <- k_grid %>% bind_cols(habitat)
-    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_diameter,"_m.Rdata"))
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_area,".Rdata"))
     
     rm(curr_rast)
     rm(habitat)
@@ -242,7 +250,7 @@ for(i in 1:nrow(lookup)){
     habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2:3], curregion, sep="_")))
     
     k_grid <- k_grid %>% left_join(habitat, by='cellid') %>% st_sf()
-    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_diameter,"_m.Rdata"))
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_area,".Rdata"))
     
     rm(curr_rast)
     rm(habitat)
@@ -255,7 +263,7 @@ for(i in 1:nrow(lookup)){
     
   }
 
-save(k_grid, file = paste0(oupdir, "koala_gridded_habitat", curregion, cell_diameter,"_m.Rdata"))    
+save(k_grid, file = paste0(oupdir, "koala_gridded_habitat", curregion, cell_area,".Rdata"))    
 }
 
 ###END
