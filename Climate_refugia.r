@@ -82,3 +82,24 @@ refugiaFun("perc90ofrecords", "Current", "No_duplicates")
 refugiaFun("perc95ofrecords", "2070", "No_duplicates")
 refugiaFun("perc95ofrecords", "Current", "No_duplicates")
 
+
+#Just rename the files and move to another directory
+renamefun <- function(currstack, modtype) {
+  
+  for (i in 1:nlayers(currstack)){
+    currname <- names(currstack)[i]
+    if (str_detect(currname, "mod")) {
+      currmod <- str_split(currname, "_")[[1]][2]
+    } else if(str_detect(currname, "meanTI_2070")) {
+      currmod <- paste0(str_split(currname, "_")[[1]][3:4], collapse="_")
+    } else {
+      currmod <- paste0(str_split(currname, "_")[[1]][2:3], collapse="_")
+    }
+    
+    writeRaster(currstack[[i]], filename=paste0("Climrasters_thresholded/nothreshold/", modtype, "_", currname), format='GTiff', datatype='FLT4S')
+  }
+} 
+renamefun(nichestack, "NicheMapper")
+renamefun(maxestack, "Maxent")
+
+
