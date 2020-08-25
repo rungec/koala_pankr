@@ -25,7 +25,7 @@ pawcdir <- paste0(datadir, "Soil/PAWC_1m/PAWC_1m/pawc_1m")
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/st_parallel.r"))
 
-cell_area = "10_ha" 
+cell_area = "10ha" 
 ncore = 8 #EDIT number of cores to use for parallel #put 1 if don't want to run in parallel
 
 ######################
@@ -38,7 +38,7 @@ bb <- st_transform(bb, 3577)
 if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))==FALSE){
   k_grid <- makegridfun(bb, currsize=1000) 
   save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
-  st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_area,"_m.shp"), driver='ESRI Shapefile')
+  st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_area,".shp"), driver='ESRI Shapefile')
 } else {
   load(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
 }
@@ -46,7 +46,7 @@ if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))==FAL
 ######################
 ##Extract attributes for datasets that span the whole study region
 ######################
-if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE){
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"1.Rdata"))==FALSE){
   print(paste0("Starting koala occurrences ", Sys.time()))
   
 #load and extract koala occurrence
@@ -60,10 +60,14 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE)
   k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) 
 
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"1.Rdata"))
   rm(current_koala)
   rm(historic_koala)
-  
+} else {
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,"1.Rdata"))
+}
+
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))==FALSE){
 #load and extract plant available water content
   print(paste0("Starting PAWC ", Sys.time()))
   pawc <- raster(pawcdir) #250m res, mm/m for top 1m
@@ -73,12 +77,17 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE)
   pawc_max <- rast_parallel(pawc, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(pawc_mean = pawc_mean, pawc_max = pawc_max)
 
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))
   rm(pawc)
   rm(pawc_max)
   rm(pawc_mean)
+} else {
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))
+}
+
   
 #load and extract soil depth
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))==FALSE){
   print(paste0("Starting soil depth ", Sys.time()))
   k_grid <- k_grid %>% st_transform(4283) #GDA94
   soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', depth=1, aoi=k_grid) 
@@ -87,22 +96,32 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE)
   soildepth_max <- rast_parallel(soildepth, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(soildepth_mean = soildepth_mean, soildepth_max = soildepth_max)
   
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))
   rm(soildepth)
   rm(soildepth_mean)
   rm(soildepth_max)
+  } else {
+    load(paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))
+  }
+
   
 #load and extract bushfire freq
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))==FALSE){
   print(paste0("Starting bushfire freq ", Sys.time()))
   firerast <- raster(firedir)
   k_grid <- k_grid %>% st_transform(st_crs(firerast)) #WGS84
   firefreq_88to15 <- rast_parallel(firerast, k_grid, fun=max, na.rm=TRUE, n_cores = ncore)
   k_grid<- k_grid %>% bind_cols(firefreq_88to15 = firefreq_88to15)
-  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+  save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))
   rm(firefreq)
   rm(firefreq_88to15)
+  } else {
+    load(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))
+  }
+
   
 #load and extract permanent water
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))==FALSE){
  #water <- st_read(paste0(waterdir, "SurfaceHydrologyPolygonsNational.gdb")) %>% 
  #             filter(PERENNIALITY=='Perennial') %>% st_transform(3577)
 ##fix geometry 
@@ -134,16 +153,19 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))==FALSE)
    mutate(permanent_water_area_ha = case_when(is.na(permanent_water_area_ha) ~ 0, 
                                               TRUE ~ permanent_water_area_ha))
  
- save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
- st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"_m.shp"), driver='ESRI Shapefile')
+ save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))
+ 
  rm(water)
  rm(w1)
  rm(w2)
   
   } else {
-  load(paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
-}
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))
+  }
+
 head(k_grid)
+save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
+st_write(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,".shp"), driver='ESRI Shapefile')
 
 ######################
 #Extract climate data
@@ -183,7 +205,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE)
   k_grid <- k_grid %>% bind_cols(clim_data)
   
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))
-  st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_area,"_m.shp"), driver='ESRI Shapefile')
+  st_write(k_grid, paste0(oupdir, "koala_gridded_clim_",cell_area,".shp"), driver='ESRI Shapefile')
   rm(climnames)
   rm(climstack)
   rm(clim_data)
