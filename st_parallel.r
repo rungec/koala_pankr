@@ -13,7 +13,7 @@ rast_parallel <- function(x, y, n_cores, ...){
 }
 
 
-#This doesn't work on windows
+#mclapplys doesn't work on windows
 #library(devtools)
 #install_github('nathanvan/parallelsugar')
 #https://www.r-bloggers.com/parallelsugar-an-implementation-of-mclapply-for-windows/

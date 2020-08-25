@@ -11,7 +11,7 @@ setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters_data/"
 
 #load data k_grid
-load(paste0("Gridded_data/koala_gridded_vars_", cell_area, ".Rdata"))
+load(paste0("Gridded_data/koala_raw_pankrclasses_", cell_area, ".Rdata"))
 k_grid <- k_grid %>% st_transform(3577) #GDA94 Albers
 
 #test data
