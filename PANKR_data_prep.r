@@ -25,7 +25,7 @@ pawcdir <- paste0(datadir, "Soil/PAWC_1m/PAWC_1m/pawc_1m")
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
 source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/st_parallel.r"))
 
-cell_area = "10ha" 
+cell_area = "100ha" 
 ncore = 8 #EDIT number of cores to use for parallel #put 1 if don't want to run in parallel
 
 ######################
@@ -221,7 +221,7 @@ head(k_grid)
 #regions <- st_read(paste0(bbdir, "IBRA7_koala_management_regions.shp"))
 print(paste0("Starting habitat ", Sys.time()))
 lookup <- read.csv(paste0("habitatfilelist.csv"))
-k_grid <- k_grid %>% st_transform(3577) #GDA94 albers 
+k_grid <- k_grid %>% dplyr::select(cellid) #GDA94 albers and drop other columns 
 
 #for each region, we calculate the area of koala habitat in each grid cell, and the quality of the koala habtiat in each grid cell.
 #quality is not comparable across regions
@@ -246,7 +246,7 @@ for(i in 1:nrow(lookup)){
    
     #here we don't need  a left_join because raster extract keeps a row for each cellid in k_grid
     k_grid <- k_grid %>% bind_cols(habitat)
-    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_area,".Rdata"))
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, curregion, ".Rdata"))
     
     rm(curr_rast)
     rm(habitat)
@@ -255,6 +255,7 @@ for(i in 1:nrow(lookup)){
         
   } else if (lookup$state[i]=='SEQ'){
     
+    k_grid <- k_grid %>% st_transform(3577)
     #we use the HSM categories 4:10 (low-high quality habitat, see documentation)
     curr_shp <- st_read(paste0(datadir, lookup$Filename[i])) %>% 
                   st_transform(3577) %>% 
@@ -272,7 +273,7 @@ for(i in 1:nrow(lookup)){
     habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2:3], curregion, sep="_")))
     
     k_grid <- k_grid %>% left_join(habitat, by='cellid') %>% st_sf()
-    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_",cell_area,".Rdata"))
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, curregion, ".Rdata"))
     
     rm(curr_rast)
     rm(habitat)
@@ -282,10 +283,10 @@ for(i in 1:nrow(lookup)){
     
     
     
-    
+    save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, curregion, ".Rdata")) 
   }
 
-save(k_grid, file = paste0(oupdir, "koala_gridded_habitat", curregion, cell_area,".Rdata"))    
+save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, ".Rdata"))   
 }
 
 ###END
