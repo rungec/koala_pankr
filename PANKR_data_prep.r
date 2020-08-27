@@ -121,8 +121,6 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))==FALSE
   k_grid <- k_grid %>% st_transform(4283) #GDA94
   
   #split the template grid into smaller chunks and extract data
-  n_splits=1000
-  k_grid <- k_grid %>% mutate(splits =  rep(1:n_splits, each = nrow(k_grid) / n_splits, length.out = nrow(k_grid)))
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
