@@ -154,16 +154,15 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))==FALSE
   print(paste0("Starting bushfire freq ", Sys.time()))
   firerast <- raster(firedir)
   k_grid <- k_grid %>% st_transform(st_crs(firerast)) #WGS84
-  firefreq_88to15 <- raster::extract(firerast, k_grid, fun=max, na.rm=TRUE)
-  
+
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
     kc <- k_grid %>% filter(splits == i)
-    fire_kc <- raster::crop(fire, kc, snap='out')
+    fire_kc <- raster::crop(firerast, kc, snap='out')
     
     print(Sys.time())
-    firefreq_88to15 <- raster::extract(firerast, kc, fun=max, small=TRUE, na.rm=TRUE)
+    firefreq_88to15 <- raster::extract(fire_kc, kc, fun=max, small=TRUE, na.rm=TRUE)
     print(Sys.time())
     kc <- kc %>% bind_cols(firefreq_88to15 = firefreq_88to15) %>% st_set_geometry(NULL)
     write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_firesplit_", i, ".csv"))
@@ -176,8 +175,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))==FALSE
  
   k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="fire", grid=k_grid)
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))
-  
-  
+
   } else {
     load(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))
   }
@@ -269,7 +267,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE)
     clim_kc <- raster::crop(climstack, kc, snap='out')
     
     print(Sys.time())
-    clim_data <- raster::extract(climstack, kc, small=TRUE, fun=max, na.rm=TRUE)
+    clim_data <- raster::extract(clim_kc, kc, small=TRUE, fun=max, na.rm=TRUE)
     clim_data <- data.frame(clim_data)
     kc <- kc %>% bind_cols(clim_data) %>% st_set_geometry(NULL)
     write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_climsplit_", i, ".csv"))
