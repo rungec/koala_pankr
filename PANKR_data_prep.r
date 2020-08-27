@@ -25,8 +25,9 @@ pawcdir <- paste0(datadir, "PAWC_1m/PAWC_1m/pawc_1m")
 climdir <- paste0(datadir, "Climrasters_thresholded/nothreshold")
 
 #source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
-source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/makegridfun.r"))
-source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/st_parallel.r"))
+source(paste0(getwd(), "/R_scripts/koala_pankr/makegridfun.r"))
+source(paste0(getwd(), "/R_scripts/koala_pankr/st_parallel.r"))
+source(paste0(getwd(), "/R_scripts/koala_pankr/fastbindfun.r"))
 
 cell_area = "100ha" 
 ncore = 1 #EDIT number of cores to use for parallel #put 1 if don't want to run in parallel
@@ -104,8 +105,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))==FALSE
   }
   rm(pawc)
 
-  XXXX k_grid<- 
-
+  k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="pawc", grid=k_grid)
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))
   
 
@@ -141,7 +141,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))==FALSE
     rm(soildepth_mean)
   }
   
-  XXXX k_grid <- 
+  k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="soil", grid=k_grid) 
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))
 
   } else {
@@ -173,9 +173,8 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))==FALSE
     
   }
   rm(firerast)
-  
-  
-  k_grid<- 
+ 
+  k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="fire", grid=k_grid)
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))
   
   
@@ -281,8 +280,8 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE)
   }
   rm(climnames)
   rm(climstack)
-XXXX
-  
+ 
+  k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="clim", grid=k_grid)
   save(k_grid, file = paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))
   
 } else {
