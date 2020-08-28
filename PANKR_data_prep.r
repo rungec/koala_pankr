@@ -88,7 +88,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))==FALSE
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
-    kc <- k_grid %>% filter(splits == i)
+    kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid)
     pawc_kc <- raster::crop(pawc, kc, snap='out')
     
     print(Sys.time())
@@ -124,7 +124,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"3.Rdata"))==FALSE
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
-    kc <- k_grid %>% filter(splits == i)
+    kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid)
     print(Sys.time())
     #download data
     soildepth <- get_soils_data(product='NAT', attribute='DES', component='VAL', depth=1, aoi=kc) 
@@ -156,7 +156,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"4.Rdata"))==FALSE
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
-    kc <- k_grid %>% filter(splits == i)
+    kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid)
     fire_kc <- raster::crop(firerast, kc, snap='out')
     
     print(Sys.time())
@@ -224,7 +224,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))==FALSE
 
 head(k_grid)
 save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
-
+st_write(k_grid, paste0(oupdir, "koala_gridded_data_", cell_area, ".shp"))
 
 ######################
 #Extract climate data
@@ -261,7 +261,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE)
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
-    kc <- k_grid %>% filter(splits == i)
+    kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid) #drop the other columns
     clim_kc <- raster::crop(climstack, kc, snap='out')
     
     print(Sys.time())
