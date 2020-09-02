@@ -23,6 +23,8 @@ waterdir <- paste0(datadir, "SurfaceHydro_Perennial_dissolve_koala.shp")
 firedir <- paste0(datadir, "National_fire_freq/ff_88to152.tif")
 pawcdir <- paste0(datadir, "PAWC_1m/PAWC_1m/pawc_1m")
 climdir <- paste0(datadir, "Climrasters_thresholded/nothreshold")
+lulcdir <- paste0(datadir, "clum_50m1218m.tif")
+lulclookupdir <- paste0(datadir, "CLUM_recovery_categorisation.csv")
 
 #source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
 source(paste0(getwd(), "/R_scripts/koala_pankr/makegridfun.r"))
@@ -189,7 +191,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))==FALSE
   #water1 <- st_buffer(water, dist=0)
   #st_write(water1, paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp"), driver='ESRI Shapefile') 
   print(paste0("Starting perennial water ", Sys.time())) 
-  water <- st_read(paste0(waterdir, "SurfaceHydro_Perennial_dissolve_koala_fixgeom.shp")) %>% 
+  water <- st_read(waterdir) %>% 
     st_transform(3577) %>% st_geometry()
   k_grid <- k_grid %>% st_transform(st_crs(water))
   
@@ -222,6 +224,32 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))==FALSE
   load(paste0(oupdir, "koala_gridded_data_",cell_area,"5.Rdata"))
   }
 
+#load and extract data on land use
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE){
+ 
+   lulc <- raster(lulcdir)
+  lulclookup <- read_csv(lulclookupdir)
+  rcl <- lulclookup %>% dplyr::select(VALUE, Recovery_code)
+  k_grid <- k_grid %>% st_transform(crs(lulc))
+  lulc <- crop(lulc, k_grid)
+  lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"))
+  lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
+  
+  l1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = lulc_shp) %>% 
+    mutate(recoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+    dplyr::select(cellid, recoverable_area_ha)
+  
+  #join back to dataset
+  k_grid<- k_grid %>%  
+    left_join(w1, by='cellid') %>% 
+    mutate(recoverable_area_ha = case_when(is.na(recoverable_area_ha) ~ 0, 
+                                               TRUE ~ recoverable_area_ha))
+  
+  
+} else {
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))
+}  
+  
 head(k_grid)
 save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
 st_write(k_grid, paste0(oupdir, "koala_gridded_data_", cell_area, ".shp"))
@@ -303,6 +331,10 @@ for(i in 1:nrow(lookup)){
   
   if(lookup$state[i]=='NSW'){
 
+    #make this faster, add a loop
+    #first clip to the raster
+    #or clip the shp to the KMR
+    #reclassify the raster as habitat/non habitat OR make non habitat NAs
     curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
     k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
     #area of polygon that is not classed as no data
@@ -326,7 +358,7 @@ for(i in 1:nrow(lookup)){
   } else if (lookup$state[i]=='SEQ'){
     
     k_grid <- k_grid %>% st_transform(3577)
-    #we use the HSM categories 4:10 (low-high quality habitat, see documentation)
+    #we use the HSM categories 4:10 (low-high quality core habitat, see documentation)
     curr_shp <- st_read(paste0(datadir, lookup$Filename[i])) %>% 
                   st_transform(3577) %>% 
                   group_by(HSM_CATEGO) %>% 
