@@ -26,6 +26,8 @@ pawcdir <- paste0(datadir, "PAWC_1m/PAWC_1m/pawc_1m")
 climdir <- paste0(datadir, "Climrasters_thresholded/Climate_refugia/")
 lulcdir <- paste0(datadir, "clum_50m1218m.tif")
 lulclookupdir <- paste0(datadir, "CLUM_recovery_categorisation.csv")
+snesdir <- paste0(datadir, "Phascolarctos_cinereus_85104Clipped.shp")
+
 
 #source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
 #source(paste0(getwd(), "/R_scripts/koala_pankr/makegridfun.r"))
@@ -240,50 +242,76 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
   lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"), datatype='INT2S')
   #lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
   
-   l1 <- lulc[lulc[] <> 1] <- NA
+  print(paste("Starting recoverable lulc ", Sys.time()))
+   l1 <- lulc[lulc[] != 1] <- NA
   l1_pol <- st_as_stars(l1) %>% #convert raster to polygon
     st_as_sf(merge = TRUE)
   save(l1_pol, paste0(oupdir, "temp/l1_pol.Rdata"))
   lc1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l1_pol) %>% 
     mutate(recoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(cellid, recoverable_area_ha)
+    dplyr::select(recoverable_area_ha)
   save(paste0(oupdir, "temp/lc1_intersect.Rdata"))
   rm(l1)
   rm(l1_pol)
 
+  print(paste("Starting unrecoverable lulc ", Sys.time()))
   l0 <- lulc[lulc[] > 0] <- NA
   l0_pol <- st_as_stars(l0) %>% 
     st_as_sf(merge = TRUE)
   save(l0_pol, paste0(oupdir, "temp/l0_pol.Rdata"))
   lc0 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l0_pol) %>% 
     mutate(unrecoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(cellid, unrecoverable_area_ha)
+    dplyr::select(unrecoverable_area_ha)
   save(paste0(oupdir, "temp/lc0_intersect.Rdata"))
   rm(l0)
   rm(l0_pol)
 
+  print(paste("Starting intact lulc ", Sys.time()))
   l2 <- lulc[lulc[] < 2] <- NA 
    l2_pol <- st_as_stars(l2) %>% 
     st_as_sf(merge = TRUE)
   save(l2_pol, paste0(oupdir, "temp/l2_pol.Rdata"))
   lc2 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l2_pol) %>% 
     mutate(intact_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(cellid, intact_area_ha)
+    dplyr::select(intact_area_ha)
   save(paste0(oupdir, "temp/lc2_intersect.Rdata"))
   rm(l2)
   rm(l2_pol)
 
 #join back to dataset
-  k_grid<- k_grid %>%  
-    left_join(lc1, by='cellid') %>% 
-    left_join(lc2, by='cellid') %>% 
-    left_join(lc0, by='cellid') 
- 
+  k_grid<- k_grid %>%  bind_cols(recoverable_area_ha=lc1, intact_area_ha=lc2, unrecoverable_area_ha=lc0)
+
 save(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata")) 
   
 } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))
 }  
+
+#load and extract Commonwealth SNES map
+if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"7.Rdata"))==FALSE){
+  
+  snes <-   st_read(snesdir) 
+  k_grid <- k_grid %>% st_transform(st_crs(snes))
+  snes_likely_pol <- snes %>% filter(distribn %in% c("Known", "Likely"))
+  print(paste("Starting snes likely ", Sys.time()))
+  snes_likely <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = snes_likely_pol) %>% 
+    mutate(snes_likelyhabitat_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+    dplyr::select(snes_likelyhabitat_ha)
+  save(snes_likely, paste0(oupdir, "temp/snes_likely.Rdata"))
+  
+  print(paste("Starting snes may ", Sys.time()))
+  snes_may_pol <- snes %>% filter(distribn =="May")
+  snes_may <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = snes_may_pol) %>% 
+    mutate(snes_maybehabitat_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+    dplyr::select(snes_maybehabitat_ha)
+  save(snes_may, paste0(oupdir, "temp/snes_may.Rdata"))
+  
+  k_grid <- k_grid %>% bind_cols(snes_likelyhabitat_ha = snes_likely, snes_maybehabitat_ha = snes_maybe)
+  
+} else {
+  load(paste0(oupdir, "koala_gridded_data_",cell_area,"7.Rdata"))
+}
+
   
 head(k_grid)
 save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,".Rdata"))
@@ -326,6 +354,7 @@ for(d in rastlist) {
   load(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))
 }
 head(k_grid)
+
 
 ######################
 #Extract habitat data
