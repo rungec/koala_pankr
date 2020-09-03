@@ -240,7 +240,6 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
   k_grid <- k_grid %>% st_transform(crs(lulc))
   lulc <- crop(lulc, k_grid)
   lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"), datatype='INT2S')
-  #lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
   
   for(i in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
@@ -249,9 +248,9 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
     
     print(Sys.time())
     lulc_matrix <- raster::extract(lulc_kc, kc)
-    recoverable_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==1)) else NA )) *50*50/10000
-    unrecoverable_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==0)) else NA )) *50*50/10000
-    intact_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==2)) else NA )) *50*50/10000
+    recoverable_area_ha <- unlist(lapply(lulc_matrix, function(x) if (!is.null(x)) length(which(x==1)) else NA )) *50*50/10000
+    unrecoverable_area_ha <- unlist(lapply(lulc_matrix, function(x) if (!is.null(x)) length(which(x==0)) else NA )) *50*50/10000
+    intact_area_ha <- unlist(lapply(lulc_matrix, function(x) if (!is.null(x)) length(which(x==2)) else NA )) *50*50/10000
     
     print(Sys.time())
     kc <- kc %>% bind_cols(recoverable_area_ha = recoverable_area_ha, 
@@ -263,7 +262,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
 
 #join back to dataset
 k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="lulc", grid=k_grid)
-save(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata")) 
+save(k_grid, file=paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata")) 
   
 } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))
@@ -289,6 +288,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"7.Rdata"))==FALSE
   save(snes_may, paste0(oupdir, "temp/snes_may.Rdata"))
   
   k_grid <- k_grid %>% bind_cols(snes_likelyhabitat_ha = snes_likely, snes_maybehabitat_ha = snes_maybe)
+  save(k_grid, file= paste0(oupdir, "koala_gridded_data_",cell_area,"7.Rdata"))
   
 } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_area,"7.Rdata"))
