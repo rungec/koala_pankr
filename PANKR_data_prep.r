@@ -9,7 +9,7 @@ library(raster)
 library(slga) #for download of Soil and Landscape Grid of Australia https://www.clw.csiro.au/aclep/soilandlandscapegrid/GetData-R_package.html
 library(lwgeom)
 library(snow)
-library(stars)
+#library(stars)
 
 
 #Dirs & file locations
@@ -242,45 +242,27 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
   lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"), datatype='INT2S')
   #lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
   
-  print(paste("Starting recoverable lulc ", Sys.time()))
-   l1 <- lulc[lulc[] != 1] <- NA
-  l1_pol <- st_as_stars(l1) %>% #convert raster to polygon
-    st_as_sf(merge = TRUE)
-  save(l1_pol, paste0(oupdir, "temp/l1_pol.Rdata"))
-  lc1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l1_pol) %>% 
-    mutate(recoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(recoverable_area_ha)
-  save(paste0(oupdir, "temp/lc1_intersect.Rdata"))
-  rm(l1)
-  rm(l1_pol)
+  for(i in 1:n_splits){
+    print(paste0("starting split ", i, " ", Sys.time()))
+    kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid)
+    lulc_kc <- raster::crop(lulc, kc, snap='out')
+    
+    print(Sys.time())
+    lulc_matrix <- raster::extract(lulc_kc, kc)
+    recoverable_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==1)) else NA )) *50*50/10000
+    unrecoverable_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==0)) else NA )) *50*50/10000
+    intact_area_ha <- unlist(lapply(v, function(x) if (!is.null(x)) length(which(x==2)) else NA )) *50*50/10000
+    
+    print(Sys.time())
+    kc <- kc %>% bind_cols(recoverable_area_ha = recoverable_area_ha, 
+                           unrecoverable_area_ha = unrecoverable_area_ha, 
+                           intact_area_ha = intact_area_ha) %>% st_set_geometry(NULL)
+    write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_lulcplit_", i, ".csv"))
+  }
 
-  print(paste("Starting unrecoverable lulc ", Sys.time()))
-  l0 <- lulc[lulc[] > 0] <- NA
-  l0_pol <- st_as_stars(l0) %>% 
-    st_as_sf(merge = TRUE)
-  save(l0_pol, paste0(oupdir, "temp/l0_pol.Rdata"))
-  lc0 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l0_pol) %>% 
-    mutate(unrecoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(unrecoverable_area_ha)
-  save(paste0(oupdir, "temp/lc0_intersect.Rdata"))
-  rm(l0)
-  rm(l0_pol)
-
-  print(paste("Starting intact lulc ", Sys.time()))
-  l2 <- lulc[lulc[] < 2] <- NA 
-   l2_pol <- st_as_stars(l2) %>% 
-    st_as_sf(merge = TRUE)
-  save(l2_pol, paste0(oupdir, "temp/l2_pol.Rdata"))
-  lc2 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l2_pol) %>% 
-    mutate(intact_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
-    dplyr::select(intact_area_ha)
-  save(paste0(oupdir, "temp/lc2_intersect.Rdata"))
-  rm(l2)
-  rm(l2_pol)
 
 #join back to dataset
-  k_grid<- k_grid %>%  bind_cols(recoverable_area_ha=lc1, intact_area_ha=lc2, unrecoverable_area_ha=lc0)
-
+k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="lulc", grid=k_grid)
 save(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata")) 
   
 } else {
