@@ -9,6 +9,7 @@ library(raster)
 library(slga) #for download of Soil and Landscape Grid of Australia https://www.clw.csiro.au/aclep/soilandlandscapegrid/GetData-R_package.html
 library(lwgeom)
 library(snow)
+library(stars)
 
 
 #Dirs & file locations
@@ -27,7 +28,7 @@ lulcdir <- paste0(datadir, "clum_50m1218m.tif")
 lulclookupdir <- paste0(datadir, "CLUM_recovery_categorisation.csv")
 
 #source(paste0(dirname(getwd()), "/R_scripts/koala_pankr/extractfun.r"))
-source(paste0(getwd(), "/R_scripts/koala_pankr/makegridfun.r"))
+#source(paste0(getwd(), "/R_scripts/koala_pankr/makegridfun.r"))
 source(paste0(getwd(), "/R_scripts/koala_pankr/st_parallel.r"))
 source(paste0(getwd(), "/R_scripts/koala_pankr/fastbindfun.r"))
 
@@ -41,7 +42,7 @@ n_splits = 1000 #split the data into smaller chunks for faster processing
 #bb <- st_read(paste0(bbdir, "IBRA7_regions_states_koala_dissolve.shp"))
 #bb <- st_transform(bb, 3577)
 
-#make hexagons #did this is ARCGIS using generatetesselation tool
+#make hexagons #make grid is really slow so did this is ARCGIS using generatetesselation tool
 # if(file.exists(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))==FALSE){
 #   k_grid <- makegridfun(bb, currsize=1000) 
 
@@ -50,6 +51,12 @@ n_splits = 1000 #split the data into smaller chunks for faster processing
 # } else {
 #   load(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
 # }
+
+#add a columnn 'split' to template grid for splitting into smaller chunks
+load(paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
+k_grid <- k_grid %>% mutate(splits =  rep(1:n_splits, each = nrow(k_grid) / n_splits, length.out = nrow(k_grid)))
+#save(k_grid, file = paste0(oupdir, "koala_templatehexgrid_",cell_area,".Rdata"))
+  # st_write(k_grid, paste0(oupdir, "koala_templatehexgrid_",cell_area,".shp"), driver='ESRI Shapefile')
 
 ######################
 ##Extract attributes for datasets that span the whole study region
@@ -84,9 +91,7 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"2.Rdata"))==FALSE
   #pawc <- get_soils_data(product='NAT', attribute='AWC', component='VAL', depth=1, aoi=k_grid) #90m res and need to download each depth and sum
   k_grid <- k_grid %>% st_transform(st_crs(pawc)) 
   
-  #add a columnn 'split' to template grid for splitting into smaller chunks
-  k_grid <- k_grid %>% mutate(splits =  rep(1:n_splits, each = nrow(k_grid) / n_splits, length.out = nrow(k_grid)))
-  #split and extract data
+   #split and extract data
   print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
@@ -232,19 +237,49 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))==FALSE
   rcl <- lulclookup %>% dplyr::select(VALUE, Recovery_code)
   k_grid <- k_grid %>% st_transform(crs(lulc))
   lulc <- crop(lulc, k_grid)
-  lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"))
-  lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
+  lulc <- raster::subs(lulc, y=rcl, filename=paste0(datadir, "CLUM_reclassify_recovery_potential.tif"), datatype='INT2S')
+  #lulc_shp <- rasterToPolygons(lulc, dissolve=TRUE)
   
-  l1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = lulc_shp) %>% 
+   l1 <- lulc[lulc[] <> 1] <- NA
+  l1_pol <- st_as_stars(l1) %>% #convert raster to polygon
+    st_as_sf(merge = TRUE)
+  save(l1_pol, paste0(oupdir, "temp/l1_pol.Rdata"))
+  lc1 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l1_pol) %>% 
     mutate(recoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
     dplyr::select(cellid, recoverable_area_ha)
-  
-  #join back to dataset
+  save(paste0(oupdir, "temp/lc1_intersect.Rdata"))
+  rm(l1)
+  rm(l1_pol)
+
+  l0 <- lulc[lulc[] > 0] <- NA
+  l0_pol <- st_as_stars(l0) %>% 
+    st_as_sf(merge = TRUE)
+  save(l0_pol, paste0(oupdir, "temp/l0_pol.Rdata"))
+  lc0 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l0_pol) %>% 
+    mutate(unrecoverable_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+    dplyr::select(cellid, unrecoverable_area_ha)
+  save(paste0(oupdir, "temp/lc0_intersect.Rdata"))
+  rm(l0)
+  rm(l0_pol)
+
+  l2 <- lulc[lulc[] < 2] <- NA 
+   l2_pol <- st_as_stars(l2) %>% 
+    st_as_sf(merge = TRUE)
+  save(l2_pol, paste0(oupdir, "temp/l2_pol.Rdata"))
+  lc2 <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = l2_pol) %>% 
+    mutate(intact_area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
+    dplyr::select(cellid, intact_area_ha)
+  save(paste0(oupdir, "temp/lc2_intersect.Rdata"))
+  rm(l2)
+  rm(l2_pol)
+
+#join back to dataset
   k_grid<- k_grid %>%  
-    left_join(w1, by='cellid') %>% 
-    mutate(recoverable_area_ha = case_when(is.na(recoverable_area_ha) ~ 0, 
-                                               TRUE ~ recoverable_area_ha))
-  
+    left_join(lc1, by='cellid') %>% 
+    left_join(lc2, by='cellid') %>% 
+    left_join(lc0, by='cellid') 
+ 
+save(k_grid, paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata")) 
   
 } else {
   load(paste0(oupdir, "koala_gridded_data_",cell_area,"6.Rdata"))
