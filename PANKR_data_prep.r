@@ -343,7 +343,7 @@ head(k_grid)
 ######################
 #regions <- st_read(paste0(bbdir, "IBRA7_koala_management_regions.shp"))
 print(paste0("Starting habitat ", Sys.time()))
-lookup <- read.csv(paste0("habitatfilelist.csv"))
+lookup <- read.csv(paste0(datadir, "habitatfilelist.csv"))
 k_grid <- k_grid %>% dplyr::select(cellid) #GDA94 albers and drop other columns 
 
 #for each region, we calculate the area of koala habitat in each grid cell, and the quality of the koala habtiat in each grid cell.
@@ -386,20 +386,22 @@ for(i in 1:nrow(lookup)){
     #we use the HSM categories 4:10 (low-high quality core habitat, see documentation)
     curr_shp <- st_read(paste0(datadir, lookup$Filename[i])) %>% 
                   st_transform(3577) %>% 
-                  group_by(HSM_CATEGO) %>% 
+                  #group_by(HSM_CATEGO) %>% 
                   summarise(area = sum(AREA_HA))
 
     #habitat <- st_intersection(k_grid, curr_shp) %>% 
     habitat <- st_parallel(k_grid, st_intersection, n_cores = ncore, y = curr_shp) %>% 
       mutate(area_ha = as.numeric(st_area(.)/10000)) %>% st_set_geometry(NULL) %>% 
       group_by(cellid) %>% 
-      summarise(habitat_area_ha = sum(area_ha),
-                habitat_rank_mean = sum(HSM_CATEGO*area_ha)/sum(area_ha)) %>% 
-      dplyr::select(cellid, habitat_area_ha, habitat_rank_mean )
+      summarise(habitat_area_ha = sum(area_ha)) %>%
+                #habitat_rank_mean = sum(HSM_CATEGO*area_ha)/sum(area_ha)) %>% 
+      #dplyr::select(cellid, habitat_area_ha, habitat_rank_mean )
+      dplyr::select(cellid, habitat_area_ha)
     
-    habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2:3], curregion, sep="_")))
+    habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2], curregion, sep="_")))
+    #habitat <- setNames(habitat, c("cellid", paste(names(habitat)[2:3], curregion, sep="_")))
     
-    k_grid <- k_grid %>% left_join(habitat, by='cellid') %>% st_sf()
+    k_grid <- k_grid %>% left_join(habitat, by='cellid') 
     save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, curregion, ".Rdata"))
     
     rm(curr_rast)
