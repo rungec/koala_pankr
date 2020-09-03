@@ -22,7 +22,7 @@ histkoaladir <- paste0(datadir, "Koala_Qld_NSW_merge_1970to2000_1kmres_noDup.shp
 waterdir <- paste0(datadir, "SurfaceHydro_Perennial_dissolve_koala.shp")
 firedir <- paste0(datadir, "National_fire_freq/ff_88to152.tif")
 pawcdir <- paste0(datadir, "PAWC_1m/PAWC_1m/pawc_1m")
-climdir <- paste0(datadir, "Climrasters_thresholded/nothreshold")
+climdir <- paste0(datadir, "Climrasters_thresholded/Climate_refugia/")
 lulcdir <- paste0(datadir, "clum_50m1218m.tif")
 lulclookupdir <- paste0(datadir, "CLUM_recovery_categorisation.csv")
 
@@ -259,49 +259,28 @@ st_write(k_grid, paste0(oupdir, "koala_gridded_data_", cell_area, ".shp"))
 ######################
 if(file.exists(paste0(oupdir, "koala_gridded_clim_",cell_area,".Rdata"))==FALSE){
   print(paste0("Starting climate ", Sys.time()))
-  climstack <- stack(list.files(climdir, recursive = TRUE, full.names = TRUE)) 
-  #1=50% 2=80% 3=90% 4=95%
-
-  #shorten the names of each model
-  climnames <- names(climstack) %>% as_tibble %>%  
-    mutate(Model = case_when(str_detect(value, "Maxent") ~"Mx",
-                             TRUE ~"Nm"),
-           Scenario = case_when(str_detect(value, "average") ~ "av", 
-                                str_detect(value, "extremesA") ~ "eA", 
-                                str_detect(value, "extremesB") ~ "eB", 
-                                str_detect(value, "low") ~ "lo", 
-                                str_detect(value, "med") ~ "me",
-                                TRUE ~ "hi"),
-           Time = case_when(str_detect(value, "Acc70") ~"AC70",
-                            str_detect(value, "ACCESS") ~"AC70",
-                            str_detect(value, "HadGEM2") ~"HG70",
-                            str_detect(value, "Had70") ~"HG70",
-                            TRUE ~ "Curr")) %>%
-           #mutate(Threshold = case_when(str_detect(value, "1$") ~ "50", 
-                #                 str_detect(value, "2$") ~ "80",
-                #                 str_detect(value, "3$") ~ "90",
-                 #                TRUE ~ "95")) %>%
-    #mutate(new_name = paste(Model, Scenario, Time, Threshold, sep="_"))
-    mutate(new_name = paste(Model, Scenario, Time, sep="_"))
+  rastlist <- paste(rep(c("2070", "Current"), each=3), c("perc99ofrecords", "perc95ofrecords", "perc90ofrecords"), sep="_")
   
-  names(climstack) <- climnames$new_name
+for(d in rastlist) {
+  currrast <- raster(list.files(climdir, pattern=d))
+  k_grid <- k_grid %>% st_transform(crs(currrast))
   
-  print(paste0("starting splits ", Sys.time()))
   for (i  in 1:n_splits){
     print(paste0("starting split ", i, " ", Sys.time()))
     kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid) #drop the other columns
-    clim_kc <- raster::crop(climstack, kc, snap='out')
+    clim_kc <- raster::crop(currrast, kc, snap='out')
     
     print(Sys.time())
     clim_data <- raster::extract(clim_kc, kc, small=TRUE, fun=max, na.rm=TRUE)
     clim_data <- data.frame(clim_data)
+    setNames(clim_data, d)
     kc <- kc %>% bind_cols(clim_data) %>% st_set_geometry(NULL)
-    write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_climsplit_", i, ".csv"))
+    write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_climsplit_", d, "_", i, ".csv"))
     rm(kc)
     rm(clim_kc)
     rm(climdata)
     
-  }
+  }}
   rm(climnames)
   rm(climstack)
  
