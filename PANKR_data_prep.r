@@ -380,7 +380,7 @@ for(i in 1:nrow(lookup)){
     rm(habitat_rank_mean)
     rm(habitat_area_ha)
         
-  } else if (lookup$state[i]=='SEQ'){
+  } else if (lookup$state[i]=='SEQ'){ #Did this in ARCGIS it was faster
     
     k_grid <- k_grid %>% st_transform(3577)
     #we use the HSM categories 4:10 (low-high quality core habitat, see documentation)
