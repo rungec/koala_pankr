@@ -33,13 +33,10 @@ write.csv(s2, paste0(oupdir, "Summary_koala_gridded_vars.csv"))
 
 #######################################
 #Lets look at cutpoints and how much landscape is covered by each variable
-
 k_dat <- kfix %>% st_set_geometry(NULL)
 k_dat <- k_dat %>% mutate(all_koala = current_koala + historic_koala,
                           log_all_koala = log(all_koala+1),
                           all_koala_binomial = case_when(all_koala>0 ~ 1,TRUE ~ 0))
-
-
 #number of cells with 12 future climate models (90% threshold)
 k_dat %>% filter(climate_2070_perc90ofrecords==12 & !is.na(climate_2070_perc90ofrecords)) %>% nrow() 
 k_dat %>% filter(climate_Current_perc90ofrecords==6 & !is.na(climate_Current_perc90ofrecords)) %>% nrow() 
@@ -51,6 +48,10 @@ k_dat %>% filter(snes_maybehabitat_ha>0) %>% nrow()
 k_dat %>% filter(intact_area_ha>0) %>% nrow()
 k_dat %>% filter(recoverable_area_ha>0) %>% nrow()
 k_dat %>% filter(unrecoverable_area_ha>0) %>% nrow()
+
+#number of cells with koala
+k_dat %>% filter(current_koala>0) %>% nrow()
+k_dat %>% filter(historic_koala>0) %>% nrow()
 
 #plot vars
 p4 <- ggplot(k_dat) +
@@ -73,15 +74,62 @@ k_dat %>% filter(firefreq_88to15>2) %>% summarise(100*sum(current_koala)/n_koala
 k_dat %>% filter(permanent_water_area_ha==0) %>% summarise(100*sum(current_koala)/n_koala)
 k_dat %>% filter(permanent_water_area_ha>0) %>% summarise(100*sum(current_koala)/n_koala)
 k_dat %>% filter(soildepth_mean>0.8) %>% summarise(100*sum(current_koala)/n_koala)
+k_dat %>% filter(soildepth_mean>0.9) %>% summarise(100*sum(current_koala)/n_koala)
 k_dat %>% filter(soildepth_mean>0.8) %>% summarise(100*sum(historic_koala)/n_koala_historic)
-k_dat %>% filter(soildepth_mean>0.8) %>% summarise(100*sum(historic_koala)/n_koala_historic)
+k_dat %>% filter(pawc_mean>30) %>% summarise(100*sum(current_koala)/n_koala)
+k_dat %>% filter(pawc_mean>40) %>% summarise(100*sum(current_koala)/n_koala)
+k_dat %>% filter(pawc_mean>50) %>% summarise(100*sum(current_koala)/n_koala)
+k_dat %>% filter(pawc_mean>100) %>% summarise(100*sum(current_koala)/n_koala)
+
+#area under cutoff points
+k_dat %>% filter(firefreq_88to15<3 | is.na(firefreq_88to15)) %>% nrow()
+k_dat %>% filter(firefreq_88to15<3 ) %>% nrow()
+k_dat %>% filter(permanent_water_area_ha>0 ) %>% nrow()
+k_dat %>% filter(soildepth_mean>0.8 ) %>% nrow()
+k_dat %>% filter(soildepth_mean>0.9 ) %>% nrow()
+k_dat %>% filter(soildepth_mean>1.0 ) %>% nrow()
+k_dat %>% filter(pawc_mean>30 ) %>% nrow()
+k_dat %>% filter(pawc_mean>40 ) %>% nrow()
+k_dat %>% filter(pawc_mean>50 ) %>% nrow()
+k_dat %>% filter(pawc_mean>100 ) %>% nrow()
 
 
+################################
+##Plot the variables
+region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
+
+plotfun <- function(data, colid, plottitle, ...) {
+    p <- tm_shape(data) +
+      tm_fill(col=colid, title=plottitle, legend.position=c("top", "right"), colorNA="grey90", ...) +
+      tm_shape(region) + tm_borders()
+  tmap_save(p, paste0(oupdir, colid, ".png"), height=1920, width=1080)
+}
+greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
+
+plotfun(kfix, colid="current_koala", plottitle="Recent koala", breaks=c(0, 1, 10, 500, 3100), palette=greypal)
+plotfun(kfix, colid="historic_koala", plottitle="Historic koala", breaks=c(0, 1, 10, 200, 1400), palette=greypal)
+plotfun(kfix, colid="pawc_mean", plottitle="Mean PAWC (mm)", n=4, style='pretty', palette='YlGnBu', showNA=FALSE)
+plotfun(kfix, colid="soildepth_mean", plottitle="Soil depth (m)", n=4, style='pretty', palette='YlGnBu', colorNA="grey90", textNA="No data")
+plotfun(kfix, colid="firefreq_88to15", plottitle="Fire frequency", breaks=c(0, 1, 3, 18), style='pretty', palette=-'YlGnBu', colorNA="grey90", textNA="No data")
+plotfun(kfix, colid="permanent_water_area_ha", plottitle="Area of permanent water (ha)", breaks=c(0, 1, 10, 50, 100), palette='YlGnBu')
+plotfun(kfix, colid="recoverable_area_ha", plottitle="Restorable area (ha)", n=5, style='pretty', palette='YlGnBu', showNA=FALSE)
+plotfun(kfix, colid="unrecoverable_area_ha", plottitle="Unrestorable area (ha)", n=5, style='pretty', palette='YlGnBu', showNA=FALSE)
+plotfun(kfix, colid="intact_area_ha", plottitle="Intact area (ha)", n=5, style='pretty', palette='YlGnBu', showNA=FALSE)
+plotfun(kfix, colid="snes_maybehabitat_ha", plottitle="SNES (may occur, ha)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="snes_likelyhabitat_ha", plottitle="SNES (likely to occur, ha)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_2070_perc99ofrecords", plottitle="2070 climate refugia (99)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_2070_perc95ofrecords", plottitle="2070 climate refugia (95)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_2070_perc90ofrecords", plottitle="2070 climate refugia (90)", style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_Current_perc99ofrecords", plottitle="Current climate refugia (99)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_Current_perc95ofrecords", plottitle="Current climate refugia (95)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="climate_Current_perc90ofrecords", plottitle="Current climate refugia (90)", n=5, style='pretty', palette='YlGnBu')
+plotfun(kfix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", n=5, style='pretty', palette='YlGnBu')
+
+##################################
 #Model of koala refugia
-
-
 #need a binomial model with probability of current koala vs probability of not koala?
 library(MASS)
+
 m1 <- with(k_dat, glm.nb(all_koala ~ pawc_mean + soildepth_mean + permanent_water_area_ha, link=log))
 #m3 <- with(k_dat, glm.nb(all_koala ~ pawc_mean + permanent_water_area_ha, link=log)) #does not converge
 
