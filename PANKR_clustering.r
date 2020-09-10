@@ -19,10 +19,11 @@ k_grid <- k_grid %>% st_transform(3577) #GDA94 Albers
 #plot(t, col = sf.colors(12, categorical = TRUE))
 
 #Set up function
-clusterFun <- function(k_grid, curr_class, min_area_list, oupdir){
+clusterFun <- function(k_grid, pankr_class, curr_scenario, min_area_list, oupdir){
   
   cur_pols <- k_grid %>% 
-                filter(pankr_class %in% curr_class) %>% #First we select polygons of a given type
+                filter(pankr_class %in% curr_scenario) %>% #First we select polygons of a given class(known, recovery etc) and scenario (cutoffs for inclusion in the class)
+               # st_buffer() %>%
                 st_union() %>%  #we then join adjacent polygons together
                 st_cast("POLYGON") %>% st_sf() %>%
                 mutate(area_ha = as.numeric(st_area(.)/10000)) 
@@ -32,9 +33,9 @@ clusterFun <- function(k_grid, curr_class, min_area_list, oupdir){
     curr_filter <- filter(curr_pols, area_ha > min_area_list[[i]])
       
       if(nrow(curr_filter)>0) {
-        st_write(curr_filter, paste0(oupdir, "pankr_", curr_class, "_clusterthresh_", min_area_list[[i]], "_ha.shp"), append=FALSE) 
-        d <- curr_filter %>% summarise(keep_polygons_bigger_than = min_area_list[[i]], 
-                                       total_area_ha = sum(area_ha)) %>% st_drop_geometry()
+        st_write(curr_filter, paste0(oupdir, "pankr_", curr_class, "_clusterthresh_", min_area_list[[i]], "_ha.gpkg")) 
+        d <- curr_filter %>% st_drop_geometry() %>% summarise(keep_polygons_bigger_than = min_area_list[[i]], 
+                                       total_area_ha = sum(area_ha)) 
       } else {
       d <- data.frame(class = curr_class,
                       min_polygon_size = min_area_list[[i]], 
@@ -47,8 +48,9 @@ clusterFun <- function(k_grid, curr_class, min_area_list, oupdir){
 }  
   
 #Run Clusters
-d1 <- clusterFun(k_grid, curr_class=1, min_area_list = list(0, 100, 10000), oupdir = oupdir)
-d2 <- clusterFun(k_grid, curr_class=2, min_area_list = list(0, 100, 10000), oupdir = oupdir)
+d1 <- clusterFun(k_grid, pankr_class='known_pankr', curr_scenario=1, min_area_list = list(0, 100, 10000), oupdir = oupdir)
+d1 <- clusterFun(k_grid, pankr_class='known_pankr', curr_scenario=2, min_area_list = list(0, 100, 10000), oupdir = oupdir)
+
 
 d_all <- rbind(d1, d2) 
 write.csv(d_all, paste0(oupdir, "Cluster_threshold_sensitivity.csv"))
