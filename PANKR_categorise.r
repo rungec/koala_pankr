@@ -21,35 +21,47 @@ load(paste0(oupdir, "koala_gridded_vars_", cell_area, "SEQ_tidy.Rdata"))
 
 
 #Categorise
-kpankr <- kfix %>% 
-          mutate(known_pankr = case_when(current_koala > 1 & intact_area_ha > 0 ~ 1,
-                                         current_koala > 1 & snes_likelyhabitat_ha > 0 ~ 2,
-                                         current_koala > 1 & snes_maybehabitat_ha > 0 ~ 3,
-                                         current_koala > 1 & intact_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 4,
-                                         current_koala > 1 & intact_area_ha > 0 & climate_2070_perc90ofrecords > 5 ~ 5,
-                                            TRUE ~ 0),
-                 recovery_pankr = case_when(current_koala == 0 & recoverable_area_ha > 0 ~ 1,
-                                            TRUE ~ 0),
-                 bushfire_pankr = case_when(is.na(firefreq_88to15) ~ 1,
-                                            firefreq_88to15 == 1 | is.na(firefreq_88to15) ~ 2,
-                                            firefreq_88to15 < 3 | is.na(firefreq_88to15) ~ 3,
-                                            firefreq_88to15 == 1 | is.na(firefreq_88to15) & pawc_mean > 77 ~ 4,
-                                            TRUE ~ 0),
-                 drought_refugia = case_when(soildepth_mean > 1.0 & pawc_mean > 100 & permanent_water_area_ha > 0 ~ 1,
-                                            soildepth_mean > 1.0 & pawc_mean > 100  ~ 2,
-                                             soildepth_mean > 0.958 & pawc_mean > 77 & permanent_water_area_ha > 0 ~ 3,
-                                             TRUE ~ 0),
-                 climate_refugia = case_when(climate_2070_perc90ofrecords==12 ~ 1,
-                                             climate_2070_perc95ofrecords==12 ~ 2,
-                                             climate_2070_perc99ofrecords==12 ~ 3,
-                                             climate_2070_perc90ofrecords > 5 ~ 4,
-                                             climate_2070_perc95ofrecords > 5 ~ 5,
-                                             climate_2070_perc99ofrecords > 5 ~ 6,
-                                             TRUE ~ 0)) %>% 
-            dplyr::select(cellid,known_pankr, recovery_pankr, bushfire_pankr, drought_refugia, climate_refugia)
+known_pankr <- kfix %>% 
+  mutate(scenario_1 = case_when(current_koala > 1 & intact_area_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(current_koala > 1 & snes_likelyhabitat_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(current_koala > 1 & snes_maybehabitat_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(current_koala > 1 & intact_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(current_koala > 1 & intact_area_ha > 0 & climate_2070_perc90ofrecords > 5 ~ 1, TRUE ~ 0))  %>%
+  dplyr::select(starts_with('scenario'))
+save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rdata")) 
+                 
+recovery_pankr <- kfix %>% 
+  mutate(scenario_1 = case_when(current_koala == 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0))  %>%
+  dplyr::select(starts_with('scenario'))
+save(recovery_pankr, file=paste0(oupdir, "koala_recovery_pankr_raw_", cell_area, ".Rdata")) 
+ 
+bushfire_pankr <- kfix %>% 
+  mutate(scenario_1 = case_when(is.na(firefreq_88to15) ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(firefreq_88to15 == 1 | is.na(firefreq_88to15) ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(firefreq_88to15 < 3 | is.na(firefreq_88to15) ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(firefreq_88to15 == 1 | is.na(firefreq_88to15) & pawc_mean > 77 ~ 1, TRUE ~ 0)) %>%
+  dplyr::select(starts_with('scenario'))
+save(bushfire_pankr, file=paste0(oupdir, "koala_bushfire_pankr_raw_", cell_area, ".Rdata"))           
+                                    
+drought_refugia <- kfix %>% 
+ mutate(scenario_1 = case_when(soildepth_mean > 1.0 & pawc_mean > 100 & permanent_water_area_ha > 0 ~ 1, TRUE ~ 0),
+        scenario_2 = case_when(soildepth_mean > 1.0 & pawc_mean > 100  ~ 1, TRUE ~ 0),
+        scenario_3 = case_when(soildepth_mean > 0.958 & pawc_mean > 77 & permanent_water_area_ha > 0 ~ 1, TRUE ~ 0)) %>%
+  dplyr::select(starts_with('scenario'))
+save(drought_refugia, file=paste0(oupdir, "koala_drought_refugia_raw_", cell_area, ".Rdata")) 
+
+climate_refugia <- kfix %>% 
+ mutate(scenario_1 = case_when(climate_2070_perc90ofrecords==12 ~ 1, TRUE ~ 0),
+        scenario_2 = case_when(climate_2070_perc95ofrecords==12 ~ 1, TRUE ~ 0),
+        scenario_3 = case_when(climate_2070_perc99ofrecords==12 ~ 1, TRUE ~ 0),
+        scenario_4 = case_when(climate_2070_perc90ofrecords > 5 ~ 1, TRUE ~ 0),
+        scenario_5 = case_when(climate_2070_perc95ofrecords > 5 ~ 1, TRUE ~ 0),
+        scenario_6 = case_when(climate_2070_perc99ofrecords > 5 ~ 1, TRUE ~ 0)) %>%
+ dplyr::select(starts_with('scenario'))
+save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_area, ".Rdata")) 
+                 
 
 
-save(kpankr, file=paste0(oupdir, "koala_raw_pankrclasses_", cell_area, ".Rdata"))
 
 ####################################
 library(tmap)
