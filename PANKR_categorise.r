@@ -31,7 +31,9 @@ known_pankr <- kfix %>%
 save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rdata")) 
                  
 recovery_pankr <- kfix %>% 
-  mutate(scenario_1 = case_when(current_koala == 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0))  %>%
+  mutate(scenario_1 = case_when(current_koala == 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >5 & climate_Current_perc90ofrecords ==6 ~ 1, TRUE ~ 0))  %>%
   dplyr::select(starts_with('scenario'))
 save(recovery_pankr, file=paste0(oupdir, "koala_recovery_pankr_raw_", cell_area, ".Rdata")) 
  
@@ -61,17 +63,28 @@ climate_refugia <- kfix %>%
 save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_area, ".Rdata")) 
                  
 
-
-
 ####################################
+#Plot each scenario
+
 library(tmap)
-plotfun <- function(data, colid, plottitle, ...) {
+plotfun <- function(data, plottitle, ...) {
+  for(i in 1:ncol(data)){
+    if(i<ncol(data)){
+    colid = names(data)[i]
   p <- tm_shape(data) +
-    tm_fill(col=colid, title=plottitle, legend.position=c("top", "right"), colorNA="grey90", ...) +
+    tm_fill(col=colid, title=paste0(plottitle, ": Scenario ", i), legend.position=c("top", "right"), colorNA="grey90", ...) +
     tm_shape(region) + tm_borders()
-  tmap_save(p, paste0(oupdir, colid, ".png"), height=1920, width=1080)
-}
-greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
+  tmap_save(p, paste0(oupdir, "figures/", plottitle, "_", colid, ".png"), height=1920, width=1080)
+    } else {
+    print("finished")
+  }
+}}
+greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
+region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
+
+
+plotfun(known_pankr, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+
 
 
 ###END
