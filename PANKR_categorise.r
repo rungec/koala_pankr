@@ -5,7 +5,7 @@
 #################
 library(sf)
 library(tidyverse)
-library(raster)
+library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/")
 datadir <- "Data_inp/"
@@ -41,13 +41,13 @@ save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rda
 recovery_pankr <- kfix %>% 
   mutate(scenario_1 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3  ~ 1, TRUE ~ 0),
          scenario_2 = case_when(current_koala == 0 & recoverable_area_ha > 0 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) ~ 1, TRUE ~ 0),
-         scenario_2 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
+         scenario_3 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
                                   climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
-         scenario_2 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
+         scenario_4 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
                                   climate_2070_perc95ofrecords > 6 ~ 1, TRUE ~ 0),
-         scenario_2 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
+         scenario_5 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
                                   climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
-         scenario_3 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
+         scenario_6 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
                                   climate_2070_perc95ofrecords > 6  ~ 1, TRUE ~ 0))  %>%
   dplyr::select(starts_with('scenario'))
 save(recovery_pankr, file=paste0(oupdir, "koala_recovery_pankr_raw_", cell_area, ".Rdata")) 
@@ -84,7 +84,6 @@ save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_are
 ####################################
 #Plot each scenario
 
-library(tmap)
 plotfun <- function(data, plottitle, ...) {
   for(i in 1:ncol(data)){
     if(i<ncol(data)){
@@ -104,7 +103,7 @@ region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
 plotfun(known_pankr, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(recovery_pankr, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(bushfire_pankr, plottitle="Bushfire refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-#plotfun(drought_refugia, plottitle="Drought refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(drought_refugia, plottitle="Drought refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(climate_refugia, plottitle="Climate refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 
 st_write(known_pankr, paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".gpkg"))

@@ -3,7 +3,6 @@
 #follows on from PANKR_categorise.r
 
 library(sf)
-library(raster)
 library(tidyverse)
 library(ggplot2)
 
@@ -12,7 +11,7 @@ oupdir <- "Clusters/"
 
 #####################
 #load data k_grid
-filelist <- list.files("Gridded_data/", pattern="_raw_", full.names=TRUE)
+filelist <- list.files("Gridded_data/", pattern="_raw_100ha.Rdata", full.names=TRUE)
 for(currfile in filelist){
   load(currfile)
 }
@@ -62,7 +61,7 @@ clusterFun <- function(data, datatitle, min_area_list, oupdir){
 d1 <- clusterFun(known_pankr, datatitle="Known", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
 d2 <- clusterFun(recovery_pankr, datatitle="Recovery", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
 d3 <- clusterFun(bushfire_pankr, datatitle="Bushfire", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-#d4 <- clusterFun(drought_refugia, datatitle="Drought", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
+d4 <- clusterFun(drought_refugia, datatitle="Drought", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
 d5 <- clusterFun(climate_refugia, datatitle="Climate", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
 
 d_all <- rbind(d1, d2, d3, d4, d5) 
