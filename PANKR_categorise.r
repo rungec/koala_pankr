@@ -21,6 +21,7 @@ load(paste0(oupdir, "koala_gridded_vars_", cell_area, "SEQ_tidy.Rdata"))
 
 
 #Categorise
+#scenarios where we classify polygons as known koala habitat only if those 100ha polygons have koala records
 known_pankr <- kfix %>% 
   mutate(scenario_1 = case_when(current_koala > 0 & intact_area_ha > 0 ~ 1, TRUE ~ 0),
          scenario_2 = case_when(current_koala > 0 & snes_likelyhabitat_ha > 0 ~ 1, TRUE ~ 0),
@@ -51,7 +52,40 @@ recovery_pankr <- kfix %>%
                                   climate_2070_perc95ofrecords > 6  ~ 1, TRUE ~ 0))  %>%
   dplyr::select(starts_with('scenario'))
 save(recovery_pankr, file=paste0(oupdir, "koala_recovery_pankr_raw_", cell_area, ".Rdata")) 
- 
+
+#scenarios where we classify polygons as known koala habitat once they have been aggregated (in PANKR_clustering.r)
+known2_pankr <- kfix %>% 
+  mutate(scenario_1 = case_when(intact_area_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(snes_likelyhabitat_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(snes_maybehabitat_ha > 0 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(intact_area_ha > 0 & 
+                                  climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(intact_area_ha > 0 & 
+                                  climate_2070_perc95ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_6 = case_when(intact_area_ha > 0 & 
+                                  (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & climate_Current_perc95ofrecords > 3 & 
+                                  climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_7 = case_when(intact_area_ha > 0 & 
+                                  (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & climate_Current_perc95ofrecords > 3 & 
+                                  climate_2070_perc95ofrecords > 6 ~ 1, TRUE ~ 0))  %>%
+  dplyr::select(starts_with('scenario'))
+save(known2_pankr, file=paste0(oupdir, "koala_known2_pankr_raw_", cell_area, ".Rdata")) 
+
+recovery2_pankr <- kfix %>% 
+  mutate(scenario_1 = case_when(recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3  ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(recoverable_area_ha > 0 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
+                                  climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & 
+                                  climate_2070_perc95ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
+                                  climate_2070_perc95ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_6 = case_when(recoverable_area_ha > 0 & climate_Current_perc95ofrecords >3 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & 
+                                  climate_2070_perc95ofrecords > 6  ~ 1, TRUE ~ 0))  %>%
+  dplyr::select(starts_with('scenario'))
+save(recovery2_pankr, file=paste0(oupdir, "koala_recovery2_pankr_raw_", cell_area, ".Rdata")) 
+
+#refugial areas 
 bushfire_pankr <- kfix %>% 
   mutate(scenario_1 = case_when(is.na(firefreq_88to15) ~ 1, TRUE ~ 0),
          scenario_2 = case_when(firefreq_88to15 == 1 | is.na(firefreq_88to15) ~ 1, TRUE ~ 0),
