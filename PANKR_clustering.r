@@ -25,7 +25,7 @@ clusterFun <- function(data, datatitle, min_area_list, oupdir){
     if(i<ncol(data)){
       curr_scenario <- names(data)[i]
       curr_pols <- data %>% 
-                dplyr::select(curr_scenario) %>% filter(.data[[curr_scenario]]==1) %>%
+                dplyr::select(all_of(curr_scenario)) %>% filter(.data[[curr_scenario]]==1) %>%
                # st_buffer() %>%
                 st_union() %>%  #we then join adjacent polygons together
                 st_cast("POLYGON") %>% st_sf() %>%
