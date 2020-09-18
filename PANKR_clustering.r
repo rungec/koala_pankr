@@ -5,6 +5,7 @@
 library(sf)
 library(tidyverse)
 library(ggplot2)
+library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters/"
@@ -101,14 +102,14 @@ ggsave(paste0(oupdir, "Cluster_threshold_sensitivity.png"), p)
 #Plot known2 and recovery2 scenario
 plotfun <- function(nscenarios, plottitle, ...) {
   for (i in 1:nscenarios){
-    load(paste0(oupdir, plottitle, "_scenario_", i, "_clusterthresh_0ha.gpkg"))
-  data <- curr_filter
-  colid = names(data)[1]
-  p <- tm_shape(data) +
-    tm_fill(col=colid, title=paste0(plottitle, ": Scenario ", i), legend.position=c("top", "right"), colorNA="grey90", ...) +
-    tm_shape(region) + tm_borders()
-  tmap_save(p, paste0(oupdir, "figures/", plottitle, "_", colid, ".png"), height=1920, width=1080)
-} }
+    load(file=paste0(oupdir, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
+    data <- curr_filter %>% mutate(plotid = 1)
+    p <- tm_shape(region) + tm_fill(palette=greypal[1]) +
+      tm_shape(data) +
+      tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+      tm_shape(region) + tm_borders()
+    tmap_save(p, paste0("Gridded_data/figures/", plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
+  } }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
 region <- st_read(paste0(dirname(getwd()),"Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
 
