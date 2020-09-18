@@ -41,6 +41,11 @@ k_dat <- k_dat %>% mutate(all_koala = current_koala + historic_koala,
 k_dat %>% filter(climate_2070_perc90ofrecords==12 & !is.na(climate_2070_perc90ofrecords)) %>% nrow() 
 k_dat %>% filter(climate_Current_perc90ofrecords==6 & !is.na(climate_Current_perc90ofrecords)) %>% nrow() 
 k_dat %>% filter(climate_2070_perc90ofrecords==12 & climate_Current_perc90ofrecords==6) %>% nrow() 
+#number of cells with majority climate models (90% threshold)
+k_dat %>% filter(climate_2070_perc90ofrecords>6 & !is.na(climate_2070_perc90ofrecords)) %>% nrow() 
+k_dat %>% filter(climate_Current_perc90ofrecords>3 & !is.na(climate_Current_perc90ofrecords)) %>% nrow() 
+k_dat %>% filter(climate_2070_perc90ofrecords>6 & climate_Current_perc90ofrecords>3) %>% nrow() 
+
 
 #number of cells with habitat 
 k_dat %>% filter(snes_likelyhabitat_ha>0) %>% nrow()
@@ -132,6 +137,38 @@ plotfun(kfix, colid="climate_Current_perc90ofrecords", plottitle="Current climat
 plotfun(kfix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", breaks=c(0, 0, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette='YlGnBu')
 
 ##################################
+#Plot comparing the climate cutoffs
+k_long <- k_dat %>% dplyr::select(climate_2070_perc99ofrecords:climate_Current_perc90ofrecords) %>% 
+  pivot_longer(cols=climate_2070_perc99ofrecords:climate_Current_perc90ofrecords, names_to = "clim_scenario") %>%
+  filter(!is.na(value))
+k_plot <- k_long %>% group_by(clim_scenario, value) %>% tally(name='ncells') %>%
+  group_by(clim_scenario) %>% 
+  summarise(n_allmods = sum(ncells[value==max(value)]),
+            n_majority = sum(ncells[value>6]),
+            n_majority2 = sum(ncells[value>3])) %>%
+  mutate(threshold = rep(c(90, 95, 99), times=2),
+         time_period = rep(c("2070", "Current"), each=3)) %>%
+  mutate(n_majority_fix = case_when(time_period=="Current" ~ n_majority2,
+                                    TRUE ~ n_majority)) %>%
+  dplyr::select(clim_scenario, time_period, threshold, n_allmods, n_majority_fix) %>% 
+  pivot_longer(cols=n_allmods:n_majority_fix) %>%
+  mutate(area = value/10000)
+
+
+p <- ggplot(k_plot, aes(x=threshold, y=area, col=time_period, shape=name)) +
+  geom_point(size=3) +
+  geom_line() +
+  xlab("Threshold (% of records)") + ylab("Climatically suitable (million ha)") +
+  scale_x_reverse(breaks=c(100, 99, 95, 90, 85)) +
+  theme_classic() + #theme(text = element_text(size = 18)) +
+  scale_shape_discrete(name  ="Criteria",
+                       breaks=c("n_allmods", "n_majority_fix"),
+                       labels=c("All models", "Majority of models")) +
+  scale_colour_discrete(name  ="Time period")
+ggsave(paste0(oupdir, "Climate_thresholds_area_comparison.png"), p, scale=0.6, width=10, height=7)
+
+
+###########################
 #Model of koala refugia
 #need a binomial model with probability of current koala vs probability of not koala?
 library(MASS)
