@@ -1,6 +1,7 @@
 library(raster)
 library(sf)
 library(tidyverse)
+library(stars)
 
 #Dirs & file locations
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/")
@@ -36,6 +37,34 @@ hist(kvals1$habitat_suitability, breaks=10, add=TRUE, col=NA)
 #Reclassify western regions
 
 rcl <- matrix(c(0, 0.109,0.109, 1,NA, 1), ncol=3, nrow=2)
+wr_reclass <- reclassify(wr, rcl, filename="Data_inp/Habitat_maps/NSW/Western_regions_90perc_threshold.tif")
 
-wr_reclass <- reclassify(wr, rcl, filename="Western_regions_90perc_threshold.tif")
+
+rcl <- matrix(c(0, 0.159,0.159, 1,NA, 1), ncol=3, nrow=2)
+wr_reclass <- reclassify(wr, rcl, filename="Data_inp/Habitat_maps/NSW/Western_regions_80perc_threshold.tif")
+
+summary(wr_reclass)
+ncell(wr_reclass)
+
+#########################
+##Plot the output
+wr_reclass <- read_stars("Data_inp/Habitat_maps/NSW/Western_regions_90perc_threshold.tif")
+greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
+region <- st_read("Data_inp/Habitat_maps/NSW/KMRs.shp") %>% st_transform(st_crs(wr_reclass))
+western_region <- region %>% filter(KMR %in% c("Darling Riverine Plains", "Riverina", "Far West"))
+
+#90 percent cutoff
+png(filename="Western_regions_90perc_threshold.png", height=1080, width=1080)
+plot(st_geometry(region), reset=FALSE, col = greypal[1], border = 'grey70')
+plot(st_geometry(western_region), reset=FALSE, col = "white", border = 'grey70', add=TRUE)
+plot(wr_reclass, col=greypal[2], main=NULL, add=TRUE)
+dev.off()
+
+##80 percent cutoff
+wr_reclass <- read_stars("Data_inp/Habitat_maps/NSW/Western_regions_80perc_threshold.tif")
+png(filename="Western_regions_80perc_threshold.png", height=1080, width=1080)
+plot(st_geometry(region), reset=FALSE, col = greypal[1], border = 'grey70')
+plot(st_geometry(western_region), reset=FALSE, col = "white", border = 'grey70', add=TRUE)
+plot(wr_reclass, col=greypal[2], main=NULL, add=TRUE)
+dev.off()
 
