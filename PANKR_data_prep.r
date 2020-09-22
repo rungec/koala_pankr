@@ -357,14 +357,13 @@ for(i in 1:nrow(lookup)){
   if(lookup$state[i]=='NSW'){
 
     #reclassify the raster, make non habitat NAs
-    curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
-
-    #reclass curr_rast (anything in classes very high, high or medium = habitat)
+    nswrast <- raster(list.files(paste0(datadir, "Habitat/NSW/"), pattern="KHSMclassesv1eastern_10m_albers_SG.tif$", recursive=TRUE, full.names=TRUE))
+    
+    #reclass curr_rast
     rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,1,NA,NA), ncol=3, nrow=6)
-    curr_rast <- reclassify(curr_rast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightomed.tif")
-    #(anything in classes very high or high = habitat)
+    curr_rast <- reclassify(nswrast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightomed.tif")
     rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,NA,NA,NA), ncol=3, nrow=6)
-    curr_rast2 <- reclassify(curr_rast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightohigh.tif")
+    curr_rast2 <- reclassify(nswrast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightohigh.tif")
     
     #clip k_grid to curr_rast
     k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
