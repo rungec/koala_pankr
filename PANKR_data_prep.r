@@ -359,9 +359,12 @@ for(i in 1:nrow(lookup)){
     #reclassify the raster, make non habitat NAs
     curr_rast <- raster(list.files(paste0(datadir, lookup$Filename[i]), pattern=".tif$", recursive=TRUE, full.names=TRUE))
 
-    #reclass curr_rast
+    #reclass curr_rast (anything in classes very high, high or medium = habitat)
     rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,1,NA,NA), ncol=3, nrow=6)
-    curr_rast <- reclassify(curr_rast, rcl, filename="Data_inp/Habitat_maps/NSW/Eastern_regions_veryhightomed.tif")
+    curr_rast <- reclassify(curr_rast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightomed.tif")
+    #(anything in classes very high or high = habitat)
+    rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,NA,NA,NA), ncol=3, nrow=6)
+    curr_rast2 <- reclassify(curr_rast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightohigh.tif")
     
     #clip k_grid to curr_rast
     k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
@@ -370,18 +373,21 @@ for(i in 1:nrow(lookup)){
       print(paste0("starting split ", i, " ", Sys.time()))
       kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid) #drop the other columns
       nsw_kc <- raster::crop(curr_rast, kc, snap='out')
+      nsw_kc2 <- raster::crop(curr_rast2, kc, snap='out')
       print(Sys.time())
       #area of polygon that is not classed as no data
-      habitat_area_ha <- raster::extract(nsw_kc, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, na.rm=TRUE)
-      habitat <- data.frame(habitat_area_ha)
+      habitat_area_ha_123 <- raster::extract(nsw_kc, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, na.rm=TRUE)
+      habitat_area_ha_12 <- raster::extract(nsw_kc2, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, na.rm=TRUE)
+      
+      habitat <- data.frame(habitat_area_ha_123, habitat_area_ha_12)
       habitat <- setNames(habitat, paste(names(habitat), curregion, sep="_"))
       kc <- kc %>% bind_cols(habitat) %>% st_set_geometry(NULL)
       write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_nswsplit_", i, ".csv"))
       
-    rm(kc)
-    rm(nsw_kc)
-    rm(habitat)
-    rm(habitat_area_ha)
+      rm(kc)
+      rm(nsw_kc)
+      rm(habitat)
+      rm(habitat_area_ha)
     }
 
     k_grid <- fastbindfun(paste0(oupdir, "temp"), pattern="nsw", grid=k_grid)
