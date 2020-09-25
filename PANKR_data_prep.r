@@ -357,17 +357,22 @@ for(i in 1:nrow(lookup)){
   if(lookup$state[i]=='NSW'){
 
     #reclassify the raster, make non habitat NAs
-    nswrast <- raster(list.files(paste0(datadir, "Habitat/NSW/"), pattern="KHSMclassesv1eastern_10m_albers_SG.tif$", recursive=TRUE, full.names=TRUE))
+    nswrast <- raster(list.files(paste0(datadir, "Habitat_maps/NSW/"), pattern="KHSMclassesv1eastern_10m_albers_SG.tif$", recursive=TRUE, full.names=TRUE))
+    eastregion <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_eastern.shp")) %>% st_transform(crs(nswrast))
     
     #reclass curr_rast
     rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,1,NA,NA), ncol=3, nrow=6)
-    curr_rast <- reclassify(nswrast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightomed.tif")
+    curr_rast <- reclassify(nswrast, rcl, right=NA, filename="Data_inp/Habitat_maps/NSW/Eastern_regions_veryhightomed.tif", datatype='INT2S')
     rcl <- matrix(c(0,1,2,3,4,5, 0, 1,2,3,4,5, NA,1,1,NA,NA,NA), ncol=3, nrow=6)
-    curr_rast2 <- reclassify(nswrast, rcl, filename="Data_inp/Habitat/NSW/Eastern_regions_veryhightohigh.tif")
+    curr_rast2 <- reclassify(nswrast, rcl, right=NA, filename="Data_inp/Habitat_maps/NSW/Eastern_regions_veryhightohigh.tif", datatype='INT2S')
     
     #clip k_grid to curr_rast
-    k_grid <- k_grid %>% st_transform(st_crs(curr_rast))
-    
+    k_grid <- k_grid %>% st_transform(st_crs(curr_rast2)) 
+    k_grid <- k_grid %>% mutate(nsw_eastern = lengths(st_intersects(k_grid, eastregion, sparse=TRUE))) 
+    save(k_grid, file=paste0(oupdir, "koala_gridded_vars_nsw_",cell_area,".Rdata"))       
+    k_grid <- k_grid %>%  filter(nsw_eastern==1) 
+    k_grid <- k_grid %>%  mutate(splits =  rep(1:n_splits, each = nrow(k_grid) / n_splits, length.out = nrow(k_grid)))
+
     for (i  in 1:n_splits){
       print(paste0("starting split ", i, " ", Sys.time()))
       kc <- k_grid %>% filter(splits == i) %>% dplyr::select(cellid) #drop the other columns
@@ -376,9 +381,9 @@ for(i in 1:nrow(lookup)){
       print(Sys.time())
       #area of polygon that is not classed as no data
       habitat_area_ha_123 <- raster::extract(nsw_kc, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, na.rm=TRUE)
-      habitat_area_ha_12 <- raster::extract(nsw_kc2, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast)[1]*res(curr_rast)[2]/10000, na.rm=TRUE)
+      habitat_area_ha <- raster::extract(nsw_kc2, kc, fun=function(x, ...) length(na.omit(x))*res(curr_rast2)[1]*res(curr_rast2)[2]/10000, na.rm=TRUE)
       
-      habitat <- data.frame(habitat_area_ha_123, habitat_area_ha_12)
+      habitat <- data.frame(habitat_area_ha_123, habitat_area_ha)
       habitat <- setNames(habitat, paste(names(habitat), curregion, sep="_"))
       kc <- kc %>% bind_cols(habitat) %>% st_set_geometry(NULL)
       write_csv(kc, path = paste0(oupdir, "temp/koala_gridded_data_",cell_area, "_nswsplit_", i, ".csv"))
