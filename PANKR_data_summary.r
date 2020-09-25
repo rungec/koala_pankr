@@ -135,7 +135,7 @@ plotfun(kfix, colid="climate_2070_perc90ofrecords", plottitle="Climate refugia 2
 plotfun(kfix, colid="climate_Current_perc99ofrecords", plottitle="Current climate refugia (99)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
 plotfun(kfix, colid="climate_Current_perc95ofrecords", plottitle="Current climate refugia (95)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
 plotfun(kfix, colid="climate_Current_perc90ofrecords", plottitle="Current climate refugia (90)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", breaks=c(0, 0, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette='YlGnBu')
+plotfun(k_fix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", breaks=c(0, 0.1, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette=greypal)
 plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", breaks=c(0, 5, 30, 60, 100), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
