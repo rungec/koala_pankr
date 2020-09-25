@@ -399,7 +399,11 @@ for(i in 1:nrow(lookup)){
     
   } else if (lookup$state[i]=='SEQ'){ #Did this in ARCGIS it was faster
     
+    seq_shp <- st_read(paste0(datadir, "Habitat_maps/SEQ/SEQRP_study_area.shp"))
+    seq_shp <- st_transform(3577)
     k_grid <- k_grid %>% st_transform(3577)
+    k_grid <- k_grid %>% mutate(qld_seq = lengths(st_intersects(k_grid, seq_shp, sparse=TRUE))) 
+    
     #we use the HSM categories 4:10 (low-high quality core habitat, see documentation)
     curr_shp <- st_read(paste0(datadir, lookup$Filename[i])) %>% 
                   st_transform(3577) %>% 
@@ -434,6 +438,14 @@ for(i in 1:nrow(lookup)){
 
 save(k_grid, file = paste0(oupdir, "koala_gridded_vars_", cell_area, ".Rdata"))   
 }
+
+qld_shp <- st_read(paste0(datadir, "Habitat_maps/QLD/IBRA7_regions_qldnoseq_koala_dissolve.shp"))
+qld_shp <- st_transform(qld_shp, st_crs(k_fix))
+k_fix <- k_fix %>% mutate(qld_notseq = lengths(st_intersects(k_fix, qld_shp, sparse=TRUE))) 
+
+western_shp <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_western.shp"))
+western_shp <- st_transform(western_shp, st_crs(k_fix))
+k_fix <- k_fix %>% mutate(nsw_western = lengths(st_intersects(k_fix, western_shp, sparse=TRUE))) 
 
 ###END
 
