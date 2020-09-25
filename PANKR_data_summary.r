@@ -108,6 +108,7 @@ k_dat %>% filter(pawc_mean>77 ) %>% nrow()
 ################################
 ##Plot the variables
 region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
+oupdir <- "Output/figures/variables/"
 
 plotfun <- function(data, colid, plottitle, ...) {
     p <- tm_shape(data) +
@@ -135,6 +136,9 @@ plotfun(kfix, colid="climate_Current_perc99ofrecords", plottitle="Current climat
 plotfun(kfix, colid="climate_Current_perc95ofrecords", plottitle="Current climate refugia (95)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
 plotfun(kfix, colid="climate_Current_perc90ofrecords", plottitle="Current climate refugia (90)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
 plotfun(kfix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", breaks=c(0, 0, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette='YlGnBu')
+plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", breaks=c(0, 5, 30, 60, 100), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 
 ##################################
 #Plot comparing the climate cutoffs
@@ -144,13 +148,17 @@ k_long <- k_dat %>% dplyr::select(climate_2070_perc99ofrecords:climate_Current_p
 k_plot <- k_long %>% group_by(clim_scenario, value) %>% tally(name='ncells') %>%
   group_by(clim_scenario) %>% 
   summarise(n_allmods = sum(ncells[value==max(value)]),
+            n_nminus1 = sum(ncells[value>=max(value)-1]),
+            n_nminus2 = sum(ncells[value>=max(value)-2]),
             n_majority = sum(ncells[value>6]),
             n_majority2 = sum(ncells[value>3])) %>%
   mutate(threshold = rep(c(90, 95, 99), times=2),
          time_period = rep(c("2070", "Current"), each=3)) %>%
   mutate(n_majority_fix = case_when(time_period=="Current" ~ n_majority2,
-                                    TRUE ~ n_majority)) %>%
-  dplyr::select(clim_scenario, time_period, threshold, n_allmods, n_majority_fix) %>% 
+                                    TRUE ~ n_majority),
+         n_minus = case_when(time_period=="Current" ~ n_nminus1,
+                              TRUE ~ n_nminus2)) %>%
+  dplyr::select(clim_scenario, time_period, threshold, n_allmods, n_minus, n_majority_fix) %>% 
   pivot_longer(cols=n_allmods:n_majority_fix) %>%
   mutate(area = value/10000)
 
@@ -162,10 +170,10 @@ p <- ggplot(k_plot, aes(x=threshold, y=area, col=time_period, shape=name)) +
   scale_x_reverse(breaks=c(100, 99, 95, 90, 85)) +
   theme_classic() + #theme(text = element_text(size = 18)) +
   scale_shape_discrete(name  ="Criteria",
-                       breaks=c("n_allmods", "n_majority_fix"),
-                       labels=c("All models", "Majority of models")) +
+                       breaks=c("n_allmods", "n_minus", "n_majority_fix"),
+                       labels=c("All models", "All minus one model", "Majority of models")) +
   scale_colour_discrete(name  ="Time period")
-ggsave(paste0(oupdir, "Climate_thresholds_area_comparison.png"), p, scale=0.6, width=10, height=7)
+ggsave(paste0(oupdir, "Climate_thresholds_area_comparison2.png"), p, scale=0.6, width=10, height=7)
 
 
 ###########################
