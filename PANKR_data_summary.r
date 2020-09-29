@@ -140,6 +140,31 @@ plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", breaks=c(0
 plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 
+
+k_fix <- k_fix %>% mutate(complex_diff = case_when(complexsdm_value < 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 1,
+                                                   complexsdm_value >= 0.444 & complexsdm_interpolatedvalue < 0.444 ~ 2,
+                                                   complexsdm_value >= 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 3))
+table(k_fix$complex_diff)
+diffpal <- c("red", "yellow", RColorBrewer::brewer.pal(5, "YlGnBu")[3])
+plotfun(k_fix, colid="complex_diff", plottitle="Difference between complex sdm summaries", breaks=c(0,1.1,2.1,3.1), labels=c("interpolated not centroid", "centroid not interpolated", "both"), palette=diffpal, showNA=FALSE)
+
+k_fix <- k_fix %>% mutate(snes_complex_diff = case_when((snes_likelyhabitat_ha == 0 & snes_maybehabitat_ha == 0) & complexsdm_value >= 0.444 ~ 1,
+                                                        (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value < 0.444 ~ 2,
+                                                        (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value >= 0.444 ~ 3))
+table(k_fix$snes_complex_diff)
+k_fix <- k_fix %>% mutate(snes_complex_diff2 = case_when(snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.444 ~ 1,
+                                                        snes_likelyhabitat_ha > 0 & complexsdm_value < 0.444 ~ 2,
+                                                        snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.444 ~ 3))
+table(k_fix$snes_complex_diff2)
+k_fix <- k_fix %>% mutate(snes_complex_diff3 = case_when(snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.3925 ~ 1,
+                                                        snes_likelyhabitat_ha > 0 & complexsdm_value < 0.3925 ~ 2,
+                                                        snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.3925 ~ 3))
+table(k_fix$snes_complex_diff3)
+plotfun(k_fix, colid="snes_complex_diff", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
+plotfun(k_fix, colid="snes_complex_diff3", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
+plotfun(k_fix, colid="snes_complex_diff2", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
+
+
 ##################################
 #Plot comparing the climate cutoffs
 k_long <- k_dat %>% dplyr::select(climate_2070_perc99ofrecords:climate_Current_perc90ofrecords) %>% 
