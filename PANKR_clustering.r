@@ -13,7 +13,7 @@ currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1
 
 #####################
 #load data k_grid
-filelist <- list.files("Gridded_data/", pattern="_raw_100ha.Rdata", full.names=TRUE)
+filelist <- list.files("Gridded_data/intermediate2/", pattern="_raw_100ha.Rdata", full.names=TRUE)
 for(currfile in filelist){
   load(currfile)
 }
