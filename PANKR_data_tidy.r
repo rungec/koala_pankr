@@ -47,9 +47,9 @@ k_fix <- k_fix %>% mutate(habitat_area_ha_nsw_west_ess = case_when(nsw_western==
 k_fix <- k_fix %>% rowwise() %>%
             mutate(habitat_area_total = case_when(nsw_eastern==1|qld_seq==1 ~ sum(habitat_area_ha_seq, habitat_area_ha_nsw, na.rm=TRUE),
                                                          nsw_western==1 ~ habitat_area_ha_nsw_west_ess),
-                                      habitat_area_total_v2 = case_when(nsw_eastern==1|qld_seq==1 ~ sum(habitat_area_ha_seq, habitat_area_ha_nsw_123, na.rm=TRUE),
+                                      habitat_area_total_s2 = case_when(nsw_eastern==1|qld_seq==1 ~ sum(habitat_area_ha_seq, habitat_area_ha_nsw_123, na.rm=TRUE),
                                                             nsw_western==1 ~ habitat_area_ha_nsw_west_maxk))
-k_fix <- k_fix %>% replace_na(list(habitat_area_total=0, habitat_area_total_v2=0))
+k_fix <- k_fix %>% replace_na(list(habitat_area_total=0, habitat_area_total_s2=0))
 
 
 #change the order of columns
@@ -57,7 +57,7 @@ k_fix <- k_fix %>% relocate(complexsdm_value:complexsdm_interpolatedvalue, .afte
 k_fix <- k_fix %>% relocate(nsw_eastern, .after=qld_notseq)
 k_fix <- k_fix %>% relocate(nsw_western, .after=nsw_eastern)
 k_fix <- k_fix %>% relocate(habitat_area_ha_nsw_west_ess:habitat_area_ha_nsw_west_maxk, .after=habitat_area_ha_nsw_123)
-k_fix <- k_fix %>% relocate(habitat_area_total:habitat_area_total_v2, .after=nsw_western)
+k_fix <- k_fix %>% relocate(habitat_area_total:habitat_area_total_s2, .after=nsw_western)
 
 
 #rename columns
