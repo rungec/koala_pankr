@@ -140,7 +140,8 @@ plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", breaks=c(0
 plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 
-
+###############
+#Comparing the habitat models
 k_fix <- k_fix %>% mutate(complex_diff = case_when(complexsdm_value < 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 1,
                                                    complexsdm_value >= 0.444 & complexsdm_interpolatedvalue < 0.444 ~ 2,
                                                    complexsdm_value >= 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 3))
@@ -163,6 +164,39 @@ table(k_fix$snes_complex_diff3)
 plotfun(k_fix, colid="snes_complex_diff", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
 plotfun(k_fix, colid="snes_complex_diff3", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
 plotfun(k_fix, colid="snes_complex_diff2", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
+
+#################################
+#Map habitat by region
+nsw_eastern <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_eastern.shp"))
+nsw_western <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_western.shp"))
+seq_region <- st_read(paste0(datadir, "Habitat_maps/SEQ/SEQRP_study_area.shp"))
+
+oupdir <- "Output/figures/variables/"
+
+plotfun <- function(data, colid, plottitle, oupname, region, ...) {
+  currbox <- st_bbox(region, crs=st_crs(region))
+  p <- tm_shape(data, bbox=currbox) +
+    tm_fill(col=colid, title=plottitle, colorNA="grey90", ...) +
+   # tm_shape(nsw_eastern) +
+   # tm_fill(palette="grey90") +
+    tm_shape(region) + tm_borders() + 
+    tm_layout(legend.position=c("left", "top"))
+  tmap_save(p, paste0(oupdir, colid, oupname,".png"), width=1080)
+}
+greypal <- c("grey90", RColorBrewer::brewer.pal(4, "YlGnBu"))
+
+plotfun(k_fix, colid="habitat_area_total", plottitle="SEQ habitat", oupname="_SEQ", region=seq_region,
+        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+
+plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (high-vhigh)", oupname="_NSWE",  region=nsw_eastern, 
+        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (med-vhigh)", oupname="_NSWE", region=nsw_eastern, 
+        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+
+plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (complex ess)", oupname="_NSWW", region=nsw_western, 
+        breaks=c(0, 0.1, 102), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (complex maxk)", oupname="_NSWW", region=nsw_western, 
+        breaks=c(0, 0.1, 102), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
 
 
 ##################################

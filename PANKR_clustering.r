@@ -9,6 +9,7 @@ library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters/"
+testid <- "Test2/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
 #####################
@@ -49,7 +50,7 @@ clusterFun <- function(data, datatitle, min_area_list, oupdir, ...){
         }
           if(nrow(curr_filter)>0) {
             if(min_area_list[[i]]==0) {
-            save(curr_filter, file=paste0(oupdir, datatitle, "_", curr_scenario, "_clusterthresh_", min_area_list[[i]], "ha.Rdata")) 
+            save(curr_filter, file=paste0(oupdir, testid, datatitle, "_", curr_scenario, "_clusterthresh_", min_area_list[[i]], "ha.Rdata")) 
             #st_write(curr_filter, paste0(oupdir, datatitle, "_", curr_scenario, "_clusterthresh_", min_area_list[[i]], "ha.gpkg")) 
             }
               d <- curr_filter %>% st_drop_geometry() %>% summarise(pankr_type = datatitle,
@@ -68,23 +69,24 @@ clusterFun <- function(data, datatitle, min_area_list, oupdir, ...){
     } else if(i==ncol(data)){
         print("finished")
     }}
-    write.csv(df, paste0(oupdir, "Cluster_threshold_sensitivity", datatitle, ".csv"))  
+    write.csv(df, paste0(oupdir, testid, "Cluster_threshold_sensitivity", datatitle, ".csv"))  
     return(df)
 }  
 
 #####################  
 #Run Clusters
-d1 <- clusterFun(known_pankr, datatitle="Known", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d1b <- clusterFun(known2_pankr, datatitle="Known2", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d2 <- clusterFun(recovery_pankr, datatitle="Recovery", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d2b <- clusterFun(recovery2_pankr, datatitle="Recovery2", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d3 <- clusterFun(bushfire_pankr, datatitle="Bushfire", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d4 <- clusterFun(drought_refugia, datatitle="Drought", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
-d5 <- clusterFun(climate_refugia, datatitle="Climate", min_area_list = list(0, 100, 1000, 10000), oupdir = oupdir)
+d1 <- clusterFun(known_pankr, datatitle="Known", min_area_list = list(0, 1000, 10000, 100000), oupdir = oupdir)
+d1b <- clusterFun(known2_pankr, datatitle="Known2", min_area_list = list(0, 1000, 10000, 100000), oupdir = oupdir)
+d2 <- clusterFun(recovery_pankr, datatitle="Recovery", min_area_list = list(0, 1000, 10000, 100000), oupdir = oupdir)
+d2b <- clusterFun(recovery2_pankr, datatitle="Recovery2", min_area_list = list(0, 1000, 10000, 100000), oupdir = oupdir)
+# d3 <- clusterFun(bushfire_pankr, datatitle="Bushfire", min_area_list = list(0, 1000, 10000), oupdir = oupdir)
+# d4 <- clusterFun(drought_refugia, datatitle="Drought", min_area_list = list(0, 1000, 10000), oupdir = oupdir)
+# d5 <- clusterFun(climate_refugia, datatitle="Climate", min_area_list = list(0, 1000, 10000), oupdir = oupdir)
 
-d_all <- rbind(d1, d2, d3, d4, d5, d1b, d2b) 
+#d_all <- rbind(d1, d2, d3, d4, d5, d1b, d2b) 
+d_all <- rbind(d1, d2, d1b, d2b) 
 d_all_spread <- d_all %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
-write.csv(d_all_spread, paste0(oupdir, "Cluster_threshold_sensitivity.csv"))
+write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity.csv"))
 
 #####################
 #Plot sensitivity to threshold
@@ -95,26 +97,35 @@ p <- ggplot(d_all, aes(x=keep_polygons_bigger_than +1, y=total_area_ha, col=scen
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
   facet_wrap('pankr_type', scales="free_y")
-ggsave(paste0(oupdir, "Cluster_threshold_sensitivity.png"), p)
+ggsave(paste0(oupdir, testid, "Cluster_threshold_sensitivity.png"), p)
 
 
 ####################
 #Plot known2 and recovery2 scenario
 plotfun <- function(nscenarios, plottitle, ...) {
   for (i in 1:nscenarios){
-    load(file=paste0(oupdir, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
+    load(file=paste0(oupdir, testid, "data/", plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
     data <- curr_filter %>% mutate(plotid = 1)
-    p <- tm_shape(region) + tm_fill(palette=greypal[1]) +
+    p <- tm_shape(region) + 
+    #p <- tm_shape(region, bbox=nsw_region) + 
+    #p <- tm_shape(region, bbox=seq_region) + 
+      tm_fill(palette=greypal[1]) +
       tm_shape(data) +
       tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
       tm_shape(region) + tm_borders()
-    tmap_save(p, paste0("Gridded_data/figures/", plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
+    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1920, width=1080)
+    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1920, width=1080)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
   } }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
-region <- st_read(paste0(dirname(getwd()),"Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
+region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
+# nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
+# nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
+# seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
+# seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
 
 
-plotfun(nscenarios=7, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=6, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 
 
