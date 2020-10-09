@@ -42,9 +42,14 @@ re_oup <- re_oup %>% mutate(RE_suitability = case_when(Tree_utility=='Higher' & 
                                                        Tree_utility %in% c('Higher', "Medium") & perc_REpolys_withkoala > 0 ~ "Medium",
                                                        Tree_utility %in% c('Higher', "Medium") & is.na(n_koalaocc) ~ "Low",
                                                        TRUE ~ "None"))
+re_oup <- re_oup %>% mutate(RE_suitability_index = as.integer(case_when(RE_suitability =="Very high" ~ 1, 
+                                                             RE_suitability =="High" ~ 2,
+                                                             RE_suitability =="Medium" ~ 3,
+                                                             RE_suitability =="Low" ~ 4,
+                                                            TRUE ~ 5)))
 
 re_oup <- re_oup %>% select(!Description)
-#st_write(re_oup, "Shapefiles/biome_re_utility/Qld_RE_utility.gpkg", append=FALSE)
+st_write(re_oup, "Shapefiles/biome_re_utility/Qld_RE_utility.gpkg", append=FALSE)
 st_write(re_oup, "Shapefiles/biome_re_utility/Qld_RE_utility.shp")
 
 ##############################

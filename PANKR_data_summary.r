@@ -1,7 +1,6 @@
 #################
 library(sf)
 library(tidyverse)
-library(MASS)
 library(tmap)
 library(ggpubr)
 
@@ -9,11 +8,11 @@ library(ggpubr)
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/")
 #setwd("M:/Users/uqcrung1/Documents/Koala_pankr/")
 datadir <- "Data_inp/"
-oupdir <- "Output/Gridded_data/"
+oupdir <- "Output/Gridded_data/clean/"
 
 cell_area = "100ha" 
 
-load(paste0(oupdir, "koala_gridded_vars_", cell_area, "SEQ_tidy.Rdata"))
+load(paste0(oupdir, "koala_gridded_vars_", cell_area, "_tidy.Rdata"))
 
 ################
 #Summarise the variables
@@ -170,8 +169,8 @@ plotfun(k_fix, colid="snes_complex_diff2", plottitle="Difference", breaks=c(0,1.
 nsw_eastern <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_eastern.shp"))
 nsw_western <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_western.shp"))
 seq_region <- st_read(paste0(datadir, "Habitat_maps/SEQ/SEQRP_study_area.shp"))
-
-oupdir <- "Output/figures/variables/"
+glob <- st_read("D:/Box Sync/Data_software/Datasets/General maps and shapefiles/GlobalBorders/Global_borders/Borders_naturalearth/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")
+act_region <- glob %>% filter(admin=="Australia" & name=="Australian Capital Territory")
 
 plotfun <- function(data, colid, plottitle, oupname, region, ...) {
   currbox <- st_bbox(region, crs=st_crs(region))
@@ -198,6 +197,10 @@ plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (complex ess)", ou
 plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (complex maxk)", oupname="_NSWW", region=nsw_western, 
         breaks=c(0, 0.1, 102), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
 
+plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", oupname="_act", region=act_region, 
+        breaks=c(0, 5, 30, 60, 100), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (high-vhigh)", oupname="_act2", region=act_region, 
+        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
 
 ##################################
 #Plot comparing the climate cutoffs
