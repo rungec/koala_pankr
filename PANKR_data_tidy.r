@@ -42,10 +42,16 @@ k_fix <- k_fix %>% mutate(habitat_area_ha_nsw_west_ess = case_when(nsw_western==
                           habitat_area_ha_nsw_west_maxk = case_when(nsw_western==1 & complexsdm_value >=0.3925 ~ 100))
 
 #rename columns
-k_fix <- k_fix %>% dplyr::rename(habitat_area_ha_seq = habitat_area_ha_SEQ)                          
+k_fix <- k_fix %>% dplyr::rename(habitat_area_ha_seq = habitat_area_ha_SEQ)      
+
+#fix overlapping regions in seq
+#table listing cellids for areas in seq not greater qld
+seq_fix <- read.csv(paste0(oupdir, "intermediate/Qld_seq_notgreaterqld.csv")) %>% select(cellid)
+k_fix <- k_fix %>% mutate(qld_notseq = case_when(cellid %in% seq_fix ~ 0,
+                                                 TRUE ~ qld_notseq))
 
 ##################################
-#Calcualte habitat ranking and area for greater Qld
+#Calculate habitat ranking and area for greater Qld
 k_fix <- k_fix %>% 
   mutate(habitat_rank_qld = case_when(re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0) ~ 10,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0) ~ 9,
@@ -55,8 +61,7 @@ k_fix <- k_fix %>%
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala == 0) ~ 4,
                                       TRUE ~ 0))
 
-k_fix <- k_fix %>% rowwise() %>%
-  mutate(habitat_area_ha_qld = case_when(habitat_rank_qld %in% 9:10 ~ re_suitable_12_ha_qld,
+k_fix <- k_fix %>% mutate(habitat_area_ha_qld = case_when(habitat_rank_qld %in% 9:10 ~ re_suitable_12_ha_qld,
                                          TRUE ~ 0),
          habitat_area_ha_qld_s2 = case_when(habitat_rank_qld > 3 ~ re_suitable_12_ha_qld,
                                             TRUE ~ 0))
@@ -70,9 +75,9 @@ k_fix <- k_fix %>% mutate(habitat_area_ha_nswe = case_when(habitat_area_ha_nsw >
 
 ##################################
 ##add column habitat_present
-k_fix <- k_fix %>% mutate(habitat_present = case_when(habitat_area_ha_seq > 0 | habitat_area_ha_nsw >= 30 | habitat_area_ha_qld > 0 | habitat_area_nsw_west_ess > 0 ~ 1,
+k_fix <- k_fix %>% mutate(habitat_present = case_when(habitat_area_ha_seq > 0 | habitat_area_ha_nsw >= 30 | habitat_area_ha_qld > 0 | habitat_area_ha_nsw_west_ess > 0 ~ 1,
                                                       TRUE ~ 0),
-                          habitat_present_s2 = case_when(habitat_area_ha_seq > 0 | habitat_area_ha_nsw_123 >= 30 | habitat_area_ha_qld_s2 > 0 | habitat_area_nsw_west_maxk > 0 ~ 1,
+                          habitat_present_s2 = case_when(habitat_area_ha_seq > 0 | habitat_area_ha_nsw_123 >= 30 | habitat_area_ha_qld_s2 > 0 | habitat_area_ha_nsw_west_maxk > 0 ~ 1,
                                                          TRUE ~ 0))
   
   
@@ -93,7 +98,13 @@ k_fix <- k_fix %>% relocate(complexsdm_value:complexsdm_interpolatedvalue, .afte
 k_fix <- k_fix %>% relocate(nsw_eastern, .after=qld_notseq)
 k_fix <- k_fix %>% relocate(nsw_western, .after=nsw_eastern)
 k_fix <- k_fix %>% relocate(habitat_area_ha_nsw_west_ess:habitat_area_ha_nsw_west_maxk, .after=habitat_area_ha_nsw_123)
-k_fix <- k_fix %>% relocate(habitat_area_total:habitat_area_total_s2, .after=nsw_western)
+k_fix <- k_fix %>% relocate(habitat_present:habitat_present_s2, .after=nsw_western)
+k_fix <- k_fix %>% relocate(habitat_area_total:habitat_area_total_s2, .after=habitat_present_s2)
+k_fix <- k_fix %>% relocate(snes_maybehabitat_ha:complexsdm_interpolatedvalue, .after=habitat_area_ha_nsw_west_maxk)
+k_fix <- k_fix %>% relocate(re_suitable_1_ha_qld:habitat_rank_qld, .after=complexsdm_interpolatedvalue)
+k_fix <- k_fix %>% relocate(habitat_area_ha_qld:habitat_area_ha_qld_s2, .after=habitat_area_ha_seq)
+k_fix <- k_fix %>% relocate(habitat_area_ha_nswe:habitat_area_ha_nswe_123, .after=habitat_area_ha_nsw_123)
+k_fix <- k_fix %>% ungroup()
 
 ###########################
 
