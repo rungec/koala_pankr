@@ -47,7 +47,7 @@ k_fix <- k_fix %>% dplyr::rename(habitat_area_ha_seq = habitat_area_ha_SEQ)
 #fix overlapping regions in seq
 #table listing cellids for areas in seq not greater qld
 seq_fix <- read.csv(paste0(oupdir, "intermediate/Qld_seq_notgreaterqld.csv")) %>% select(cellid)
-k_fix <- k_fix %>% mutate(qld_notseq = case_when(cellid %in% seq_fix ~ 0,
+k_fix <- k_fix %>% mutate(qld_notseq = case_when(cellid %in% seq_fix$cellid ~ 0,
                                                  TRUE ~ qld_notseq))
 
 ##################################
