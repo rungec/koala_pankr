@@ -37,7 +37,7 @@ write.csv(df, "Output/Gridded_data/koala_gridded_vars_100ha_SEQ.csv", row.names=
 k_grid <- left_join(k_grid, df, by='cellid')
 
 ###############################
-#Regional ecosytem suitability
+#Regional ecosytem suitability 1 & 2
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/")
 oupdir <- "Output/Gridded_data/clean/"
 cell_area = "100ha" 
@@ -75,5 +75,44 @@ rm(re_12)
 k_fix <- left_join(k_fix, re_1_group, by='cellid')
 k_fix <- left_join(k_fix, re_12_group, by='cellid')
 
-k_fix <- k_fix %>% mutate(habitat_area_ha_qld = case_when(re_suitable_1_ha_qld > 0 & complexsdm_value > 0.444 ~ re_suitable_1_ha_qld))
+###############################
+#Regional ecosytem suitability 3
+setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/")
+oupdir <- "clean/"
+
+load(paste0(oupdir, "koala_gridded_vars_100ha_tidy.Rdata"))
+
+k_tmp <- k_fix %>% st_set_geometry(NULL) %>% select(cellid)
+
+joinfun <- function(biome){
+  re <- st_read(dsn="intermediate/re_biome.gdb", layer=biome)
+  re <- re %>% st_set_geometry(NULL) %>% 
+    filter(!cellid==0) %>% 
+    filter(habitat==1) %>%
+    select(cellid, habitat, "SUM_AREA_GEO")
+  print(max(re$SUM_AREA_GEO, na.rm=TRUE))
+  k_tmp <- k_tmp %>% left_join(re, by='cellid')
+  names(k_tmp)[ncol(k_tmp)] <- paste0("re_3_", biome)
+  return(k_tmp)
+}
+
+
+k_tmp <- joinfun("brigalow")
+k_tmp <- joinfun("centralqldcoast")
+k_tmp <- joinfun("desertup")
+k_tmp <- joinfun("eineup")
+k_tmp <- joinfun("mitchell")
+k_tmp <- joinfun("mulga")
+k_tmp <- joinfun("neweng")
+k_tmp <- joinfun("seq")
+k_tmp <- joinfun("wettrop")
+
+k_agg <- k_tmp %>% rowwise() %>% mutate(re_suitable_3_ha_qld = sum(across(contains("re_3")), na.rm=TRUE),
+                                        habitat_present_3_qld = sum(across(contains("habitat")), na.rm=TRUE))
+
+k_fix <- k_fix %>% left_join(k_agg, by='cellid')
+
+###################################
+save(k_fix, file=paste0(oupdir, "koala_gridded_vars_100ha_tidy.Rdata"))
+st_write(k_fix, paste0(oupdir, "koala_gridded_vars_100ha_tidy.gpkg")) 
 

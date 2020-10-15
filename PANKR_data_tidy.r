@@ -55,15 +55,18 @@ k_fix <- k_fix %>% mutate(qld_notseq = case_when(cellid %in% seq_fix$cellid ~ 0,
 k_fix <- k_fix %>% 
   mutate(habitat_rank_qld = case_when(re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0) ~ 10,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0) ~ 9,
+                                      re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0) ~ 8,
                                       re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala > 0) ~ 7,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala > 0) ~ 6,
+                                      re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala > 0) ~ 5,
                                       re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala == 0) ~ 4,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala == 0) ~ 4,
+                                      re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0) & (historic_koala|current_koala == 0) ~ 4,
                                       TRUE ~ 0))
 
 k_fix <- k_fix %>% mutate(habitat_area_ha_qld = case_when(habitat_rank_qld %in% 9:10 ~ re_suitable_12_ha_qld,
                                          TRUE ~ 0),
-         habitat_area_ha_qld_s2 = case_when(habitat_rank_qld > 3 ~ re_suitable_12_ha_qld,
+         habitat_area_ha_qld_s2 = case_when(habitat_rank_qld > 3 ~ re_suitable_12_ha_qld + re_suitable_3_ha_qld,
                                             TRUE ~ 0))
 
 ##################################
@@ -90,7 +93,16 @@ k_fix <- k_fix %>% rowwise() %>%
                                             habitat_present_s2==1 & nsw_western==1 ~ habitat_area_ha_nsw_west_maxk))
 
 k_fix <- k_fix %>% replace_na(list(habitat_area_total=0, habitat_area_total_s2=0))
+k_fix <- k_fix %>% mutate(habitat_area_total = case_when(habitat_area_total > 100 ~ 100, 
+                                                         TRUE ~ habitat_area_total),
+                          habitat_area_total_s2 = case_when(habitat_area_total_s2 > 100 ~ 100, 
+                                                         TRUE ~ habitat_area_total_s2))
 
+###########################
+#add column ranking environmental suitablility
+k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 & complexsdm_value > 0.444 ~ "likely",
+                                                   (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value > 0.3925 ~ "possible",
+                                                   TRUE ~ "not suitable"))
 
 ###########################
 #change the order of columns
@@ -104,7 +116,11 @@ k_fix <- k_fix %>% relocate(snes_maybehabitat_ha:complexsdm_interpolatedvalue, .
 k_fix <- k_fix %>% relocate(re_suitable_1_ha_qld:habitat_rank_qld, .after=complexsdm_interpolatedvalue)
 k_fix <- k_fix %>% relocate(habitat_area_ha_qld:habitat_area_ha_qld_s2, .after=habitat_area_ha_seq)
 k_fix <- k_fix %>% relocate(habitat_area_ha_nswe:habitat_area_ha_nswe_123, .after=habitat_area_ha_nsw_123)
+k_fix <- k_fix %>% relocate(re_suitable_3_ha_qld, .after=re_suitable_12_ha_qld)
+k_fix <- k_fix %>% relocate(env_suitable, .before=snes_maybehabitat_ha)
 k_fix <- k_fix %>% ungroup()
+
+k_fix <- st_sf(k_fix)
 
 ###########################
 
