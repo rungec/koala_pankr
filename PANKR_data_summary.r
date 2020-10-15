@@ -171,6 +171,7 @@ nsw_western <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_western.shp"))
 seq_region <- st_read(paste0(datadir, "Habitat_maps/SEQ/SEQRP_study_area.shp"))
 glob <- st_read("D:/Box Sync/Data_software/Datasets/General maps and shapefiles/GlobalBorders/Global_borders/Borders_naturalearth/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")
 act_region <- glob %>% filter(admin=="Australia" & name=="Australian Capital Territory")
+oupdir <- "Output/figures/variables/"
 
 plotfun <- function(data, colid, plottitle, oupname, region, ...) {
   currbox <- st_bbox(region, crs=st_crs(region))
@@ -178,29 +179,46 @@ plotfun <- function(data, colid, plottitle, oupname, region, ...) {
     tm_fill(col=colid, title=plottitle, colorNA="grey90", ...) +
    # tm_shape(nsw_eastern) +
    # tm_fill(palette="grey90") +
-    tm_shape(region) + tm_borders() + 
-    tm_layout(legend.position=c("left", "top"))
+    tm_shape(region) + tm_borders(lwd=2) + 
+    #tm_layout(legend.position=c("top", "left")) 
+    tm_layout(legend.outside=TRUE, legend.outside.position="right")
   tmap_save(p, paste0(oupdir, colid, oupname,".png"), width=1080)
 }
 greypal <- c("grey90", RColorBrewer::brewer.pal(4, "YlGnBu"))
 
-plotfun(k_fix, colid="habitat_area_total", plottitle="SEQ habitat", oupname="_SEQ", region=seq_region,
-        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+#Plot area of habitat by region
+plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (ha)", oupname="_SEQ", region=seq_region,
+        breaks=c(0, 0.1, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette=greypal, showNA=FALSE)
 
-plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (high-vhigh)", oupname="_NSWE",  region=nsw_eastern, 
-        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
-plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (med-vhigh)", oupname="_NSWE", region=nsw_eastern, 
-        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", oupname="_ACT_likely", region=act_region, 
+        breaks=c(0, 5, 30, 50, 100), labels = c("< 5", "5 to 30", "30 to 50", "50 to 100"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_ha_nsw_123", plottitle="Habitat (ha)", oupname="_ACT_possible", region=act_region, 
+        breaks=c(0, 5, 30, 50, 100), labels = c("< 5", "5 to 30", "30 to 50", "50 to 100"), palette=greypal, showNA=FALSE)
 
-plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (complex ess)", oupname="_NSWW", region=nsw_western, 
-        breaks=c(0, 0.1, 102), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
-plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (complex maxk)", oupname="_NSWW", region=nsw_western, 
-        breaks=c(0, 0.1, 102), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", oupname="_NSWE_likely",  region=nsw_eastern, 
+        breaks=c(0, 5, 30, 50, 100), labels = c("< 5", "5 to 30", "30 to 50", "50 to 100"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_area_ha_nsw_123", plottitle="Habitat (ha)", oupname="_NSWE_possible", region=nsw_eastern, 
+        breaks=c(0, 5, 30, 50, 100), labels = c("< 5", "5 to 30", "30 to 50", "50 to 100"), palette=greypal, showNA=FALSE)
 
-plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", oupname="_act", region=act_region, 
-        breaks=c(0, 5, 30, 60, 100), palette='YlGnBu', showNA=FALSE)
-plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (high-vhigh)", oupname="_act2", region=act_region, 
-        breaks=c(0, 0.1, 5, 20, 102), labels = c("0", "< 5", "5 to 20", "20 to 100"), palette=greypal, showNA=FALSE)
+#Plot presence of habitat by region
+plotfun(k_fix, colid="habitat_present", plottitle="Habitat", oupname="_NSWW_likely", region=nsw_western, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_present_s2", plottitle="Habitat", oupname="_NSWW_posible", region=nsw_western, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+
+plotfun(k_fix, colid="habitat_present", plottitle="Habitat", oupname="_SEQ", region=seq_region, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+
+plotfun(k_fix, colid="habitat_present", plottitle="Habitat", oupname="_ACT_likely", region=act_region, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_present_s2", plottitle="Habitat", oupname="_ACT_possible", region=act_region, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+
+plotfun(k_fix, colid="habitat_present", plottitle="Habitat", oupname="_NSWE_likely", region=nsw_eastern, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="habitat_present_s2", plottitle="Habitat", oupname="_NSWE_posible", region=nsw_eastern, 
+        breaks=c(0, 0.1, 1), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+
 
 ##################################
 #Plot comparing the climate cutoffs
