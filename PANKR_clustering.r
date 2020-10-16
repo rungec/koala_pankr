@@ -132,7 +132,7 @@ plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', label
 #Plot scenarios for NSW
 plotfun <- function(nscenarios, plottitle, ...) {
   for (i in 1:nscenarios){
-    load(file=paste0(getwd(), oupdir, testid, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
+    load(file=paste0(oupdir, testid, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
     data <- curr_filter %>% mutate(plotid = 1)
     p <- tm_shape(region, bbox=nsw_region) + 
       #p <- tm_shape(region, bbox=seq_region) + 
