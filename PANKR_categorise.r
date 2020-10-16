@@ -8,7 +8,7 @@ library(tidyverse)
 library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/")
-datadir <- "Data_inp/"
+datadir <- paste0("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Data_inp/")
 oupdir <- "intermediate3/"
 plotdir <- paste0(dirname(getwd()), "/figures/scenarios/Test3")
 cell_area="100ha"
@@ -125,5 +125,6 @@ plotfun(recovery_pankr, plottitle="Recovery", palette=greypal, style='cat', labe
 # plotfun(climate_refugia, plottitle="Climate refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 
 #st_write(known_pankr, paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".gpkg"))
+
 
 ###END
