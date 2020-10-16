@@ -100,8 +100,8 @@ k_fix <- k_fix %>% mutate(habitat_area_total = case_when(habitat_area_total > 10
 
 ###########################
 #add column ranking environmental suitablility
-k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 & complexsdm_value > 0.444 ~ "likely",
-                                                   (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value > 0.3925 ~ "possible",
+k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 | complexsdm_value > 0.444 ~ "likely",
+                                                   (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) | complexsdm_value > 0.3925 ~ "possible",
                                                    TRUE ~ "not suitable"))
 
 ###########################
