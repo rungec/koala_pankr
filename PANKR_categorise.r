@@ -10,7 +10,7 @@ library(tmap)
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/")
 datadir <- "Data_inp/"
 oupdir <- "intermediate3/"
-plotdir <- paste0(dirname(getwd()), "/figures/")
+plotdir <- paste0(dirname(getwd()), "/figures/scenarios/Test3")
 cell_area="100ha"
 
 
