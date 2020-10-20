@@ -26,7 +26,11 @@ known_pankr <- k_fix %>%
          scenario_3 = case_when(current_koala > 0 & habitat_area_total > 50  ~ 1, TRUE ~ 0),
          scenario_4 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(current_koala > 0 & habitat_area_total > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
-         scenario_6 = case_when(current_koala > 0 & habitat_area_total > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0)) %>%
+         scenario_6 = case_when(current_koala > 0 & habitat_area_total > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_7 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_8 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_9 = case_when(current_koala > 0 & habitat_area_total > 10 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_10 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rdata")) 
                  
@@ -47,7 +51,11 @@ known2_pankr <- k_fix %>%
          scenario_3 = case_when(habitat_area_total > 50  ~ 1, TRUE ~ 0),
          scenario_4 = case_when(habitat_area_total_s2 > 50 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(habitat_area_total > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
-         scenario_6 = case_when(habitat_area_total > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0)) %>%
+         scenario_6 = case_when(habitat_area_total > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_7 = case_when(habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_8 = case_when(habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
+         scenario_9 = case_when(habitat_area_total > 10 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
+         scenario_10 = case_when(habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known2_pankr, file=paste0(oupdir, "koala_known2_pankr_raw_", cell_area, ".Rdata")) 
 
