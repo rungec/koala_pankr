@@ -18,7 +18,7 @@ occdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Data_inp/"
 currkoala <- st_read(paste0(occdir, "Koala_Qld_noSEQ_2000on_1kmres_noDup.shp"))
 st_crs(currkoala) <- CRS("+init=epsg:4283") #set proj as GDA_94 EPSG4283
 #current koala sightings
-histkoala <- st_read(paste0(occdir, "Koala_Qld_noSEQ_1970to2000_1kmres_noDup.shp"))
+histkoala <- st_read(paste0(occdir, "Koala_Qld_noSEQ_merge_1970topresent_1kmres_noDup.shp"))
 st_crs(histkoala) <- CRS("+init=epsg:4283") #set proj as GDA_94 EPSG4283
 
 #Load REDD lookup table
@@ -44,8 +44,8 @@ overlapkv <- st_intersects(currkb, reveg, sparse=TRUE)
 histkoala <- st_transform(histkoala, 3577)
 histkb <- st_buffer(histkoala, 1000)
 histkb <- st_transform(histkb, 4283)
-
 overlapkvh <- st_intersects(histkb, reveg, sparse=TRUE)
+
 
 
 #Join to occurrence and RE attribute tables
@@ -82,20 +82,20 @@ Num_RE_polys <- reveg %>% st_drop_geometry() %>%
 
 #number of RE polygons with koala records
 #number of koala records in each RE
-summarytb <- tb %>% group_by(RE1) %>% summarise(n_koalaocc = n_distinct(OBJECTID),
-                                                        n_REpolys_withkoala = n_distinct(oid)) 
-summarytbh <- tbh %>% group_by(RE1) %>% summarise(n_koalaocchist = n_distinct(OBJECTID),
-                                                        n_REpolys_withkoalahist = n_distinct(oid)) 
+summarytb <- tb %>% group_by(RE1) %>% summarise(n_koalaocc_recent = n_distinct(OBJECTID),
+                                                        n_REpolys_withkoala_recent = n_distinct(oid)) 
+summarytbh <- tbh %>% group_by(RE1) %>% summarise(n_koalaocc_inclhist = n_distinct(OBJECTID),
+                                                        n_REpolys_withkoala_inclhist = n_distinct(oid)) 
 
 #join summaries to the redd table
 redd_oup <- left_join(redd, Num_RE_polys, by = c("re_id" = "REfirst"))
 redd_oup <- left_join(redd_oup, summarytb, by = c("re_id" = "RE1"))
 redd_oup <- left_join(redd_oup, summarytbh, by = c("re_id" = "RE1"))
-redd_oup <- redd_oup %>% mutate(perc_REpolys_withkoala = 100*n_REpolys_withkoala/n_RE_polys,
-                                perc_REpolys_withkoala_hist = 100*n_REpolys_withkoalahist/n_RE_polys) 
+redd_oup <- redd_oup %>% mutate(perc_REpolys_withkoala_recent = 100*n_REpolys_withkoala_recent/n_RE_polys,
+                                perc_REpolys_withkoala_inclhist = 100*n_REpolys_withkoala_inclhist/n_RE_polys) 
                           
 #subset out the REs found in the study region #and that might be associated with koala
-redd_oup2 <- redd_oup %>% select(re_id, Description, Euc_present, n_RE_polys, n_koalaocc, n_REpolys_withkoala, perc_REpolys_withkoala, n_REpolys_withkoalahist, perc_REpolys_withkoala_hist) %>% 
+redd_oup2 <- redd_oup %>% select(re_id, Description, Euc_present, n_RE_polys, n_koalaocc_recent, n_koalaocc_inclhist, n_REpolys_withkoala_recent, perc_REpolys_withkoala_recent, n_REpolys_withkoala_inclhist, perc_REpolys_withkoala_inclhist) %>% 
                          # filter(n_RE_polys > 0 & Euc_present=='Euc' | n_koalaocc>0 )
                           filter(n_RE_polys > 0 )
 
