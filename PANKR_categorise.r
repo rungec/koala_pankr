@@ -21,8 +21,8 @@ load("clean/koala_gridded_vars_100ha_tidy.Rdata")
 #Categorise
 #scenarios where we classify polygons as known koala habitat only if those 100ha polygons have koala records
 known_pankr <- k_fix %>% 
-  mutate(scenario_1 = case_when(current_koala > 0 & habitat_area_total > 0 ~ 1, TRUE ~ 0),
-         scenario_2 = case_when(current_koala > 0 & habitat_area_total_s2 > 0 ~ 1, TRUE ~ 0),
+  mutate(scenario_1 = case_when(current_koala > 0 & habitat_area_total > 10 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(current_koala > 0 & habitat_area_total_s2 > 10 ~ 1, TRUE ~ 0),
          scenario_3 = case_when(current_koala > 0 & habitat_area_total > 50  ~ 1, TRUE ~ 0),
          scenario_4 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(current_koala > 0 & habitat_area_total > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
@@ -100,34 +100,6 @@ save(recovery2_pankr, file=paste0(oupdir, "koala_recovery2_pankr_raw_", cell_are
 #         scenario_9 = case_when(climate_2070_perc99ofrecords > 10 ~ 1, TRUE ~ 0)) %>%
 #  dplyr::select(starts_with('scenario'))
 # save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_area, ".Rdata"))
-
-
-####################################
-#Plot each scenario
-
-plotfun <- function(data, plottitle, ...) {
-  for(i in 1:ncol(data)){
-    if(i<ncol(data)){
-    colid = names(data)[i]
-  p <- tm_shape(data) +
-    tm_fill(col=colid, title=paste0(plottitle, ": Scenario ", i), legend.position=c("top", "right"), colorNA="grey90", ...) +
-    tm_shape(region) + tm_borders() +
-    tm_layout(frame=FALSE)
-  tmap_save(p, paste0(plotdir, plottitle, "_", colid, ".png"), height=1920, width=1080)
-    } else {
-    print("finished")
-  }
-}}
-greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
-region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
-
-plotfun(known_pankr, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(recovery_pankr, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-# plotfun(bushfire_pankr, plottitle="Bushfire refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-# plotfun(drought_refugia, plottitle="Drought refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-# plotfun(climate_refugia, plottitle="Climate refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-
-#st_write(known_pankr, paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".gpkg"))
 
 
 ###END
