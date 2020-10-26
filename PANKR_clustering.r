@@ -102,87 +102,59 @@ ggsave(paste0(oupdir, testid, "Cluster_threshold_sensitivity.png"), p)
 
 ####################
 #Plot known2 and recovery2 scenario
-plotfun <- function(nscenarios, plottitle, ...) {
-  for (i in 1:nscenarios){
-    load(file=paste0(oupdir, testid, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
-    data <- curr_filter %>% mutate(plotid = 1)
-    p <- tm_shape(region) + 
-    #p <- tm_shape(region, bbox=nsw_region) + 
-    #p <- tm_shape(region, bbox=seq_region) + 
-      tm_fill(palette=greypal[1]) +
-      tm_shape(data) +
-      tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
-      tm_shape(region) + tm_borders()
-    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1920, width=1080)
-    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1920, width=1080)
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
-  } }
-greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
-region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
-# nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
-# nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
-# seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
-# seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
-
-
-plotfun(nscenarios=10, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-
-####################
-#Plot scenarios for NSW
-plotfun <- function(nscenarios, plottitle, ...) {
-  for (i in 1:nscenarios){
-    load(file=paste0(oupdir, testid, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
-    data <- curr_filter %>% mutate(plotid = 1)
-    p <- tm_shape(region, bbox=nsw_region) + 
-      #p <- tm_shape(region, bbox=seq_region) + 
-      tm_fill(palette=greypal[1]) +
-      tm_shape(data) +
-      tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
-      tm_shape(region) + tm_borders()
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1920, width=1080)
-    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1920, width=1080)
-     } }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
 region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
 nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
 nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
-# seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
-# seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
+seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
+seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
 
-
-plotfun(nscenarios=10, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=10, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-
-####################
-#Plot scenarios for NSW
-plotfun <- function(nscenarios, plottitle, ...) {
+plotfun <- function(nscenarios, plottitle, sub, ...) {
   for (i in 1:nscenarios){
-    load(file=paste0(oupdir, testid, plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
+    load(paste0(oupdir, testid, "data/", plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
     data <- curr_filter %>% mutate(plotid = 1)
-    #p <- tm_shape(region, bbox=nsw_region) + 
-    p <- tm_shape(region, bbox=seq_region) + 
-      tm_fill(palette=greypal[1]) +
-      tm_shape(data) +
-      tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
-      tm_shape(region) + tm_borders()
-    #tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1920, width=1080)
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1920, width=1080)
-  } }
-greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
-region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
-#nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
-#nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
- seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
- seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
+    
+    if(sub=="nsw"){
+      p <- tm_shape(region, bbox=nsw_region) + 
+        tm_fill(palette="grey90") +
+        tm_shape(data) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_shape(region) + tm_borders() +
+        tm_layout(frame=FALSE)
+      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1072, width=716)
+    } else if(sub=="seq") {
+      p <- tm_shape(region, bbox=seq_region) + 
+        tm_fill(palette="grey90") +
+        tm_shape(data) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_shape(region) + tm_borders() + 
+        tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
+      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1072, width=1056)
+    } else {
+      p <- tm_shape(region) + 
+        tm_fill(palette="grey90") +
+        tm_shape(data) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_shape(region) + tm_borders() +
+        tm_layout(frame=FALSE)
+      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
+    }  
+  }} 
 
 
-plotfun(nscenarios=10, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=10, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+
+plotfun(nscenarios=10, plottitle="Known", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=6, plottitle="Recovery", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=10, plottitle="Known2", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=6, plottitle="Recovery2",sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+
+plotfun(nscenarios=10, plottitle="Known", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=6, plottitle="Recovery", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=10, plottitle="Known2", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=6, plottitle="Recovery2", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+
 
 
 ####################
@@ -194,22 +166,24 @@ plotfun <- function(currscenario, plottitle, sub, ...) {
       tm_fill(palette="grey90") +
       tm_shape(curr_filter) +
       tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders() 
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_nswe_scenario_", currscenario, ".png"), height=1620, width=1080)
+      tm_shape(region) + tm_borders() +
+      tm_layout(frame=FALSE)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_nswe_scenario_", currscenario, ".png"), height=1072, width=716)
    } else if(sub=="seq") {
     p <- tm_shape(region, bbox=seq_region) + 
       tm_fill(palette="grey90") +
       tm_shape(curr_filter) +
       tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
       tm_shape(region) + tm_borders() + 
-      tm_layout(legend.outside=TRUE, legend.outside.position="right")
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_seq_scenario_", currscenario, ".png"), height=1420, width=1080)
+      tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_seq_scenario_", currscenario, ".png"), height=1072, width=1056)
   } else {
     p <- tm_shape(region) + 
       tm_fill(palette="grey90") +
       tm_shape(curr_filter) +
       tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders() 
+      tm_shape(region) + tm_borders() +
+      tm_layout(frame=FALSE)
     tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_scenario_", currscenario, ".png"), height=1920, width=1080)
   }  
 } 

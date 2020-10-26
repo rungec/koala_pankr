@@ -112,7 +112,8 @@ oupdir <- "Output/figures/variables/"
 plotfun <- function(data, colid, plottitle, ...) {
     p <- tm_shape(data) +
       tm_fill(col=colid, title=plottitle, legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders()
+      tm_shape(region) + tm_borders() +
+      tm_layout(frame=FALSE)
   tmap_save(p, paste0(oupdir, colid, ".png"), height=1920, width=1080)
 }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
@@ -182,8 +183,8 @@ plotfun <- function(data, colid, plottitle, oupname, region, ...) {
    # tm_shape(nsw_eastern) +
    # tm_fill(palette="grey90") +
     tm_shape(region) + tm_borders(lwd=2) + 
-    #tm_layout(legend.position=c("top", "left")) 
-    tm_layout(legend.outside=TRUE, legend.outside.position="right")
+    #tm_layout(legend.position=c("top", "left"), frame=FALSE) 
+    tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
   tmap_save(p, paste0(oupdir, colid, oupname,".png"), width=1080)
 }
 greypal <- c("grey90", RColorBrewer::brewer.pal(4, "YlGnBu"))
@@ -258,16 +259,4 @@ p <- ggplot(k_plot, aes(x=threshold, y=area, col=time_period, shape=name)) +
 ggsave(paste0(oupdir, "Climate_thresholds_area_comparison2.png"), p, scale=0.6, width=10, height=7)
 
 
-###########################
-#Model of koala refugia
-#need a binomial model with probability of current koala vs probability of not koala?
-library(MASS)
-
-m1 <- with(k_dat, glm.nb(all_koala ~ pawc_mean + soildepth_mean + permanent_water_area_ha, link=log))
-#m3 <- with(k_dat, glm.nb(all_koala ~ pawc_mean + permanent_water_area_ha, link=log)) #does not converge
-
-m2 <- with(k_dat, glm(all_koala ~ pawc_mean + soildepth_mean + permanent_water_area_ha, family='poisson'))
-
-k_dat <- k_dat %>% 
-  
-  
+###END

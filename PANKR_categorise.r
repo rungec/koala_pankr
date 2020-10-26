@@ -109,10 +109,10 @@ plotfun <- function(data, plottitle, ...) {
   for(i in 1:ncol(data)){
     if(i<ncol(data)){
     colid = names(data)[i]
- # p <- tm_shape(data, bbox=nsw_region) +
   p <- tm_shape(data) +
     tm_fill(col=colid, title=paste0(plottitle, ": Scenario ", i), legend.position=c("top", "right"), colorNA="grey90", ...) +
-    tm_shape(region) + tm_borders()
+    tm_shape(region) + tm_borders() +
+    tm_layout(frame=FALSE)
   tmap_save(p, paste0(plotdir, plottitle, "_", colid, ".png"), height=1920, width=1080)
     } else {
     print("finished")
@@ -120,11 +120,6 @@ plotfun <- function(data, plottitle, ...) {
 }}
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
 region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
-# nsw_region <- st_read(paste0(datadir, "Habitat_maps/NSW/KMRs_eastern.shp")) 
-# nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
-# seq_region <- st_read(paste0(datadir, "Habitat_maps/SEQ/SEQRP_study_area.shp")) 
-# seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
-# 
 
 plotfun(known_pankr, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 plotfun(recovery_pankr, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
