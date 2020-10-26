@@ -5,7 +5,6 @@
 #################
 library(sf)
 library(tidyverse)
-library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/")
 datadir <- paste0("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Data_inp/")
@@ -30,7 +29,18 @@ known_pankr <- k_fix %>%
          scenario_7 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
          scenario_8 = case_when(current_koala > 0 & habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
          scenario_9 = case_when(current_koala > 0 & habitat_area_total > 10 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
-         scenario_10 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0)) %>%
+         scenario_10 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0))
+known_pankr <- known_pankr %>% 
+  mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_2_ha = case_when(scenario_1==1 ~ habitat_area_total_s2, TRUE ~ 0),
+         scenario_3_ha = case_when(scenario_2==1  ~ habitat_area_total, TRUE ~ 0),
+         scenario_4_ha = case_when(scenario_3==1 ~ habitat_area_total_s2, TRUE ~ 0),
+         scenario_5_ha = case_when(scenario_4==1~ habitat_area_total, TRUE ~ 0),
+         scenario_6_ha = case_when(scenario_5==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_7_ha = case_when(scenario_6==1 ~ habitat_area_total_s2, TRUE ~ 0),
+         scenario_8_ha = case_when(scenario_7==1 ~ habitat_area_total_s2, TRUE ~ 0),
+         scenario_9_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_10_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rdata")) 
                  
@@ -55,7 +65,18 @@ known2_pankr <- k_fix %>%
          scenario_7 = case_when(habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
          scenario_8 = case_when(habitat_area_total_s2 > 50 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
          scenario_9 = case_when(habitat_area_total > 10 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0),
-         scenario_10 = case_when(habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0)) %>%
+         scenario_10 = case_when(habitat_area_total > 30 & climate_2070_perc90ofrecords > 6 ~ 1, TRUE ~ 0))
+known_pankr <- known_pankr %>% 
+ mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+        scenario_2_ha = case_when(scenario_1==1 ~ habitat_area_total_s2, TRUE ~ 0),
+        scenario_3_ha = case_when(scenario_2==1  ~ habitat_area_total, TRUE ~ 0),
+        scenario_4_ha = case_when(scenario_3==1 ~ habitat_area_total_s2, TRUE ~ 0),
+        scenario_5_ha = case_when(scenario_4==1~ habitat_area_total, TRUE ~ 0),
+        scenario_6_ha = case_when(scenario_5==1 ~ habitat_area_total, TRUE ~ 0),
+        scenario_7_ha = case_when(scenario_6==1 ~ habitat_area_total_s2, TRUE ~ 0),
+        scenario_8_ha = case_when(scenario_7==1 ~ habitat_area_total_s2, TRUE ~ 0),
+        scenario_9_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0),
+        scenario_10_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known2_pankr, file=paste0(oupdir, "koala_known2_pankr_raw_", cell_area, ".Rdata")) 
 
