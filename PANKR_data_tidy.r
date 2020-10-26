@@ -87,9 +87,9 @@ k_fix <- k_fix %>% mutate(habitat_present = case_when(habitat_area_ha_seq > 0 | 
 ##add column habitat_area_total_ha
 #where seq area>0 & nsw area>0 add area
 k_fix <- k_fix %>% rowwise() %>%
-  mutate(habitat_area_total = case_when(habitat_present==1 & nsw_western==0 ~ sum(habitat_area_ha_seq, habitat_area_ha_nswe, habitat_area_ha_qld, na.rm=TRUE),
+  mutate(habitat_area_total = case_when(habitat_present==1 & nsw_western==0 ~ sum(habitat_area_ha_seq, habitat_area_ha_nsw, habitat_area_ha_qld, na.rm=TRUE),
                                         habitat_present==1 & nsw_western==1 ~ habitat_area_ha_nsw_west_ess),
-         habitat_area_total_s2 = case_when(habitat_present_s2==1 & nsw_western==0 ~ sum(habitat_area_ha_seq, habitat_area_ha_nswe_123, habitat_area_ha_qld_s2, na.rm=TRUE),
+         habitat_area_total_s2 = case_when(habitat_present_s2==1 & nsw_western==0 ~ sum(habitat_area_ha_seq, habitat_area_ha_nsw_123, habitat_area_ha_qld_s2, na.rm=TRUE),
                                             habitat_present_s2==1 & nsw_western==1 ~ habitat_area_ha_nsw_west_maxk))
 
 k_fix <- k_fix %>% replace_na(list(habitat_area_total=0, habitat_area_total_s2=0))
