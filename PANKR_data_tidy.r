@@ -125,5 +125,5 @@ k_fix <- st_sf(k_fix)
 ###########################
 
 save(k_fix, file=paste0(oupdir, "clean/koala_gridded_vars_100ha_tidy.Rdata"))
-st_write(k_fix, paste0(oupdir, "clean/koala_gridded_vars_100ha_tidy.gpkg")) 
+st_write(k_fix, paste0(oupdir, "clean/koala_gridded_vars_100ha_tidy.gpkg"), append=FALSE) 
 
