@@ -77,6 +77,42 @@ if(file.exists(paste0(oupdir, "koala_gridded_data_",cell_area,"1.Rdata"))==FALSE
   k_grid <- k_grid %>% bind_cols(current_koala = lengths(st_intersects(k_grid, current_koala, sparse=TRUE)), 
                                  historic_koala = lengths(st_intersects(k_grid, historic_koala, sparse=TRUE))) 
 
+#distance from koala observations
+  current_koala <- st_read(currkoaladir) %>% 
+    st_transform(3577)
+  historic_koala <- st_read(histkoaladir) %>% 
+    st_transform(3577)
+  ck_10 <- current_koala %>%
+    st_buffer(10000) %>% st_geometry()
+  hk_10  <- historic_koala %>%
+    st_buffer(10000) %>% st_geometry()
+  ck_50 <- current_koala %>%
+    st_buffer(50000) %>% st_geometry()
+  hk_50  <- historic_koala %>% 
+    st_buffer(50000) %>% st_geometry()
+  ck_100 <- current_koala %>%
+    st_buffer(100000) %>% st_geometry()
+  hk_100  <- historic_koala %>%
+    st_buffer(100000) %>% st_geometry()
+  
+  kdist <- k_grid %>% dplyr::select(cellid) %>% bind_cols(ck10 = lengths(st_intersects(k_grid, ck_10, sparse=TRUE)), 
+                                 hk10 = lengths(st_intersects(k_grid, hk_10, sparse=TRUE)),
+                                 ck50 = lengths(st_intersects(k_grid, ck_50, sparse=TRUE)), 
+                                 hk50 = lengths(st_intersects(k_grid, hk_50, sparse=TRUE)),
+                                 ck100 = lengths(st_intersects(k_grid, ck_100, sparse=TRUE)), 
+                                 hk100 = lengths(st_intersects(k_grid, hk_100, sparse=TRUE))) 
+  kdist <- kdist %>% mutate(dist2currkoala = case_when(ck10>0 ~ "< 10 km",
+                                                       ck50 > 0 ~ "10-50km", 
+                                                       ck100 > 0 ~ "50-100km",
+                                                       TRUE ~ ">100km"),
+                            dist2histkoala = case_when(hk10>0 ~ "< 10 km",
+                                                       hk50 > 0 ~ "10-50km", 
+                                                       hk100 > 0 ~ "50-100km",
+                                                       TRUE ~ ">100km")) 
+  kdist <- kdist %>% dplyr::select(dist2currkoala, dist2histkoala)
+  
+  k_grid <- k_grid %>% bind_cols(kdist)
+
   save(k_grid, file = paste0(oupdir, "koala_gridded_data_",cell_area,"1.Rdata"))
   rm(current_koala)
   rm(historic_koala)
