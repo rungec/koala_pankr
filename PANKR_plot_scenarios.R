@@ -89,17 +89,18 @@ plotfun <- function(dataname, plottitle, ...) {
         tm_fill(col=colid, title=paste0(plottitle, ": Scenario ", i), legend.position=c("top", "right"), colorNA="grey90", ...) +
         tm_shape(region) + tm_borders() +
         tm_layout(frame=FALSE)
-      tmap_save(p, paste0(plotdir, plottitle, "_", colid, ".png"), height=1920, width=1080)
+      tmap_save(p, paste0("figures/scenarios/Test1/", plottitle, "_", colid, ".png"), height=1920, width=1080)
     } else {
       print("finished")
     }
   }}
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
-region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
+region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
 
 # plotfun("bushfire_pankr", plottitle="Bushfire refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 # plotfun("drought_refugia", plottitle="Drought refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 # plotfun("climate_refugia", plottitle="Climate refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+# plotfun("climate_current", plottitle="Current climate", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 
 
 ####################

@@ -121,6 +121,19 @@ save(recovery2_pankr, file=paste0(oupdir, "koala_recovery2_pankr_raw_", cell_are
 #         scenario_9 = case_when(climate_2070_perc99ofrecords > 10 ~ 1, TRUE ~ 0)) %>%
 #  dplyr::select(starts_with('scenario'))
 # save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_area, ".Rdata"))
+# 
+# climate_current <- k_fix %>%
+#   mutate(scenario_1 = case_when(climate_Current_perc90ofrecords==6 ~ 1, TRUE ~ 0),
+#          scenario_2 = case_when(climate_Current_perc95ofrecords==6 ~ 1, TRUE ~ 0),
+#          scenario_3 = case_when(climate_Current_perc99ofrecords==6 ~ 1, TRUE ~ 0),
+#          scenario_4 = case_when(climate_Current_perc90ofrecords > 3 ~ 1, TRUE ~ 0),
+#          scenario_5 = case_when(climate_Current_perc95ofrecords > 3 ~ 1, TRUE ~ 0),
+#          scenario_6 = case_when(climate_Current_perc99ofrecords > 3 ~ 1, TRUE ~ 0),
+#          scenario_7 = case_when(climate_Current_perc90ofrecords > 4 ~ 1, TRUE ~ 0),
+#          scenario_8 = case_when(climate_Current_perc95ofrecords > 4 ~ 1, TRUE ~ 0),
+#          scenario_9 = case_when(climate_Current_perc99ofrecords > 4 ~ 1, TRUE ~ 0)) %>%
+#   dplyr::select(starts_with('scenario'))
+# save(climate_current, file=paste0(oupdir, "koala_climate_current_raw_", cell_area, ".Rdata"))
 
 
 ###END
