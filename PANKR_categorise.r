@@ -8,8 +8,8 @@ library(tidyverse)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/")
 datadir <- paste0("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Data_inp/")
-oupdir <- "intermediate3/"
-plotdir <- paste0(dirname(getwd()), "/figures/scenarios/Test3")
+oupdir <- "intermediate4/"
+plotdir <- paste0(dirname(getwd()), "/figures/scenarios/Test4")
 cell_area="100ha"
 
 
@@ -47,12 +47,35 @@ save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rda
 recovery_pankr <- k_fix %>% 
   mutate(scenario_1 = case_when(current_koala == 0 & habitat_area_total > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
          scenario_2 = case_when(current_koala == 0 & habitat_area_total_s2 > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
-         scenario_3 = case_when(current_koala == 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
-         scenario_4 = case_when(current_koala == 0 & habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(current_koala == 0 & habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(current_koala == 0 & habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
          scenario_6 = case_when(current_koala == 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0))  %>%
   dplyr::select(starts_with('scenario'))
 save(recovery_pankr, file=paste0(oupdir, "koala_recovery_pankr_raw_", cell_area, ".Rdata")) 
+
+#areas where there area known koala populations soon to be lost to climate change
+lost_pankr <- k_fix %>% 
+  mutate(scenario_1 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc90ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc90ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc99ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_6 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+  dplyr::select(starts_with('scenario'))
+save(lost_pankr, file=paste0(oupdir, "koala_lost_pankr_raw_", cell_area, ".Rdata"))
+
+#areas where monitoring is needed to determine if koala (still) occur
+monitoring_pankr <- k_fix %>% 
+  mutate(scenario_1 = case_when(habitat_area_total > 30 & current_koala == 0 ~ 1, TRUE ~ 0), #no sightings within 1km
+         scenario_2 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("10-50km", "50-100km", ">100km") ~ 1, TRUE ~ 0), #no sightings within 10km
+         scenario_3 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("50-100km", ">100km") ~ 1, TRUE ~ 0), #no sightings within 50km
+         scenario_4 = case_when(habitat_area_total > 30 & historic_koala > 0 & current_koala == 0 ~ 1, TRUE ~ 0), #historical koala but not current koala in cell
+         scenario_5 = case_when(habitat_area_total > 30 & dist2histkoala =="< 10 km" & dist2currkoala =="< 10 km" ~ 1, TRUE ~ 0), #historical koala but not current koala within 10km
+         scenario_6 = case_when(habitat_area_total > 30 & dist2histkoala %in% c("< 10 km", "10-50km") & dist2currkoala %in% c("10-50km", "50-100km") ~ 1, TRUE ~ 0)) %>% #historical koala but not current koala within 50km
+    dplyr::select(starts_with('scenario'))
+save(monitoring_pankr, file=paste0(oupdir, "koala_monitoring_pankr_raw_", cell_area, ".Rdata"))
+
 
 #scenarios where we classify polygons as known koala habitat once they have been aggregated (in PANKR_clustering.r)
 known2_pankr <- k_fix %>% 
@@ -83,13 +106,38 @@ save(known2_pankr, file=paste0(oupdir, "koala_known2_pankr_raw_", cell_area, ".R
 recovery2_pankr <- k_fix %>% 
   mutate(scenario_1 = case_when(habitat_area_total > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
          scenario_2 = case_when(habitat_area_total_s2 > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
-         scenario_3 = case_when(recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
-         scenario_4 = case_when(habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(habitat_area_total > 0 & recoverable_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(recoverable_area_ha > 0 & climate_2070_perc90ofrecords >6 ~ 1, TRUE ~ 0),
          scenario_6 = case_when(recoverable_area_ha > 0 & climate_2070_perc90ofrecords ==12 ~ 1, TRUE ~ 0))  %>%
   dplyr::select(starts_with('scenario'))
 save(recovery2_pankr, file=paste0(oupdir, "koala_recovery2_pankr_raw_", cell_area, ".Rdata")) 
 
+#areas where there area known koala populations soon to be lost to climate change
+lost2_pankr <- k_fix %>% 
+  mutate(scenario_1 = case_when(habitat_area_total > 30 & climate_2070_perc90ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(habitat_area_total > 30 & climate_2070_perc90ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(habitat_area_total > 30 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(habitat_area_total > 30 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(habitat_area_total > 30 & climate_2070_perc99ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_6 = case_when(habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+  dplyr::select(starts_with('scenario'))
+save(lost2_pankr, file=paste0(oupdir, "koala_lost2_pankr_raw_", cell_area, ".Rdata"))
+
+#################################
+##Setup files for using a third method to clump cells - based on distance to nearest sighting
+
+#areas where there area known koala populations soon to be lost to climate change
+lost3_pankr <- k_fix %>% 
+  mutate(scenario_1 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc90ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_2 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc90ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_3 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_4 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
+         scenario_5 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc99ofrecords < 7 ~ 1, TRUE ~ 0),
+         scenario_6 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+  dplyr::select(starts_with('scenario'))
+save(lost3_pankr, file=paste0(oupdir, "koala_lost3_pankr_raw_", cell_area, ".Rdata"))
+  
 # #refugial areas 
 # bushfire_pankr <- k_fix %>% 
 #   mutate(scenario_1 = case_when(is.na(firefreq_88to15) ~ 1, TRUE ~ 0),

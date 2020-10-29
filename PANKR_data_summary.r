@@ -16,7 +16,7 @@ load(paste0(oupdir, "koala_gridded_vars_", cell_area, "_tidy.Rdata"))
 
 ################
 #Summarise the variables
-s <- kfix %>% st_set_geometry(NULL) %>%
+s <- k_fix %>% st_set_geometry(NULL) %>%
   summarise(across(.cols=everything(), list(mean = ~ mean(.x, na.rm = TRUE), 
                                             min = ~ min(.x, na.rm = TRUE), 
                                             max = ~ max(.x, na.rm = TRUE), 
@@ -32,7 +32,7 @@ write.csv(s2, paste0(oupdir, "Summary_koala_gridded_vars.csv"))
 
 #######################################
 #Lets look at cutpoints and how much landscape is covered by each variable
-k_dat <- kfix %>% st_set_geometry(NULL)
+k_dat <- k_fix %>% st_set_geometry(NULL)
 k_dat <- k_dat %>% mutate(all_koala = current_koala + historic_koala,
                           log_all_koala = log(all_koala+1),
                           all_koala_binomial = case_when(all_koala>0 ~ 1,TRUE ~ 0))
@@ -118,29 +118,32 @@ plotfun <- function(data, colid, plottitle, ...) {
 }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
 
-plotfun(kfix, colid="current_koala", plottitle="Recent koala", breaks=c(0, 1, 10, 500, 3100), palette=greypal)
-plotfun(kfix, colid="historic_koala", plottitle="Historic koala", breaks=c(0, 1, 10, 200, 1400), palette=greypal)
-plotfun(kfix, colid="pawc_mean", plottitle="Mean PAWC (mm)", style='quantile', palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="soildepth_mean", plottitle="Soil depth (m)", n=5, style='quantile', palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="firefreq_88to15", plottitle="Fire frequency", breaks=c(1, 2, 3, 6, 18), labels = c("1", "2", "3 to 5", "> 5"), palette='YlGnBu', colorNA="grey90", textNA="No fires")
-plotfun(kfix, colid="permanent_water_area_ha", plottitle="Permanent water (ha)", breaks=c(0, 1, 10, 50, 100),  labels = c("0", "1 to 10", "11 to 50", "> 50"), palette='YlGnBu')
-plotfun(kfix, colid="recoverable_area_ha", plottitle="Restorable area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="unrecoverable_area_ha", plottitle="Unrestorable area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="intact_area_ha", plottitle="Intact area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="snes_maybehabitat_ha", plottitle="SNES (may occur, ha)", style='cat', palette='YlGnBu')
-plotfun(kfix, colid="snes_likelyhabitat_ha", plottitle="SNES (likely to occur, ha)", style='cat', palette='YlGnBu')
-plotfun(kfix, colid="climate_2070_perc99ofrecords", plottitle="Climate refugia 2070 (99)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="climate_2070_perc95ofrecords", plottitle="Climate refugia 2070 (95)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"),palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="climate_2070_perc90ofrecords", plottitle="Climate refugia 2070 (90)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"),palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="climate_Current_perc99ofrecords", plottitle="Current climate refugia (99)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="climate_Current_perc95ofrecords", plottitle="Current climate refugia (95)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
-plotfun(kfix, colid="climate_Current_perc90ofrecords", plottitle="Current climate refugia (90)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="current_koala", plottitle="Recent koala", breaks=c(0, 1, 10, 500, 3100), palette=greypal)
+plotfun(k_fix, colid="historic_koala", plottitle="Historic koala", breaks=c(0, 1, 10, 200, 1400), palette=greypal)
+plotfun(k_fix, colid="pawc_mean", plottitle="Mean PAWC (mm)", style='quantile', palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="soildepth_mean", plottitle="Soil depth (m)", n=5, style='quantile', palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="firefreq_88to15", plottitle="Fire frequency", breaks=c(1, 2, 3, 6, 18), labels = c("1", "2", "3 to 5", "> 5"), palette='YlGnBu', colorNA="grey90", textNA="No fires")
+plotfun(k_fix, colid="permanent_water_area_ha", plottitle="Permanent water (ha)", breaks=c(0, 1, 10, 50, 100),  labels = c("0", "1 to 10", "11 to 50", "> 50"), palette='YlGnBu')
+plotfun(k_fix, colid="recoverable_area_ha", plottitle="Restorable area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="unrecoverable_area_ha", plottitle="Unrestorable area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="intact_area_ha", plottitle="Intact area (ha)", breaks=c(0, 1, 25, 50, 100), labels = c("0", "1 to 25", "26 to 50", ">50"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="snes_maybehabitat_ha", plottitle="SNES (may occur, ha)", style='cat', palette='YlGnBu')
+plotfun(k_fix, colid="snes_likelyhabitat_ha", plottitle="SNES (likely to occur, ha)", style='cat', palette='YlGnBu')
+plotfun(k_fix, colid="climate_2070_perc99ofrecords", plottitle="Climate refugia 2070 (99)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="climate_2070_perc95ofrecords", plottitle="Climate refugia 2070 (95)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"),palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="climate_2070_perc90ofrecords", plottitle="Climate refugia 2070 (90)", breaks=c(0, 1, 6, 10, 12, 12), labels = c("0", "1 to 5", "6 to 9", "10 to 11", "12"),palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="climate_Current_perc99ofrecords", plottitle="Current climate refugia (99)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="climate_Current_perc95ofrecords", plottitle="Current climate refugia (95)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="climate_Current_perc90ofrecords", plottitle="Current climate refugia (90)", breaks=c(0, 1, 4, 6, 6), labels = c("0", "1 to 3", "4 to 5", "6"), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="habitat_area_ha_SEQ", plottitle="Habitat area SEQ (ha)", breaks=c(0, 0.1, 10, 50, 102), labels = c("0", "< 10", "10 to 50", "50 to 100"), palette=greypal)
 plotfun(k_fix, colid="habitat_area_ha_nsw", plottitle="Habitat (ha)", breaks=c(0, 5, 30, 60, 100), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (ha)", breaks=c(0, 50, 100), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
 plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (ha)", breaks=c(0, 50, 100), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
+plotfun(k_fix, colid="dist2currkoala", plottitle="Nearest sighting", style='cat', palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="dist2histkoala", plottitle="Nearest sighting", style='cat', palette='YlGnBu', showNA=FALSE)
+
 
 ###############
 #Comparing the habitat models
@@ -257,6 +260,5 @@ p <- ggplot(k_plot, aes(x=threshold, y=area, col=time_period, shape=name)) +
                        labels=c("All models", "All minus one model", "Majority of models")) +
   scale_colour_discrete(name  ="Time period")
 ggsave(paste0(oupdir, "Climate_thresholds_area_comparison2.png"), p, scale=0.6, width=10, height=7)
-
 
 ###END
