@@ -8,12 +8,12 @@ library(ggplot2)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters/"
-testid <- "Test3/"
+testid <- "Test4/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
 #####################
 #load data k_grid
-filelist <- list.files("Gridded_data/intermediate3/", pattern="_raw_100ha.Rdata", full.names=TRUE)
+filelist <- list.files("Gridded_data/intermediate4/", pattern="_raw_100ha.Rdata", full.names=TRUE)
 for(currfile in filelist){
   load(currfile)
 }
