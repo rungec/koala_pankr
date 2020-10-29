@@ -141,8 +141,8 @@ plotfun(k_fix, colid="nswcomplexsdm_interpolatedvalue", plottitle="Habitat suita
 plotfun(k_fix, colid="nswcomplexsdm_value", plottitle="Habitat suitability (complex sdm)", breaks=c(0, 0.3925, 0.444, 1), palette='YlGnBu', showNA=FALSE)
 plotfun(k_fix, colid="habitat_area_total", plottitle="Habitat (ha)", breaks=c(0, 50, 100), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
 plotfun(k_fix, colid="habitat_area_total_s2", plottitle="Habitat (ha)", breaks=c(0, 50, 100), labels = c("unsuitable", "suitable"), palette=greypal, showNA=FALSE)
-plotfun(k_fix, colid="dist2currkoala", plottitle="Nearest sighting", style='cat', palette='YlGnBu', showNA=FALSE)
-plotfun(k_fix, colid="dist2histkoala", plottitle="Nearest sighting", style='cat', palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="dist2currkoala", plottitle="Nearest sighting", style='cat', breaks=c("< 10km", "10-50km", "50-100km", ">100km"), palette='YlGnBu', showNA=FALSE)
+plotfun(k_fix, colid="dist2histkoala", plottitle="Nearest sighting", style='cat', breaks=c("< 10km", "10-50km", "50-100km", ">100km"), palette='YlGnBu', showNA=FALSE)
 
 
 ###############
