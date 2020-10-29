@@ -118,6 +118,8 @@ k_fix <- k_fix %>% relocate(habitat_area_ha_qld:habitat_area_ha_qld_s2, .after=h
 k_fix <- k_fix %>% relocate(habitat_area_ha_nswe:habitat_area_ha_nswe_123, .after=habitat_area_ha_nsw_123)
 k_fix <- k_fix %>% relocate(re_suitable_3_ha_qld, .after=re_suitable_12_ha_qld)
 k_fix <- k_fix %>% relocate(env_suitable, .before=snes_maybehabitat_ha)
+k_fix <- k_fix %>% relocate(dist2currkoala, .after=current_koala)
+k_fix <- k_fix %>% relocate(dist2histkoala, .after=historic_koala)
 k_fix <- k_fix %>% ungroup()
 
 k_fix <- st_sf(k_fix)
