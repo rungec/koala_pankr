@@ -35,6 +35,7 @@ re_shp <- re_shp %>% rename("Tree_utility" = "Spcs_tl", "n_ktreesp" = "Spcs_t_")
 
 re_shp <- re_shp %>% select(!OBJECTI:SQ_KM)
 
+
 #############################
 #Write preliminary koala tree map
 re_oup <- left_join(re_shp, kocc_df, by=c("RE1"="re_id"))
@@ -65,9 +66,12 @@ re_hist <- re_hist %>% mutate(RE_suitability_index_hist = as.integer(case_when(R
                                                                         RE_suitability_hist =="Medium" ~ 3,
                                                                         RE_suitability_hist =="Low" ~ 4,
                                                                         TRUE ~ 5)))
+re_hist <- re_hist %>% select(!Description)
 
 st_write(re_hist, "Shapefiles/biome_re_utility/Qld_RE_utility_historical.gpkg", append=FALSE)  
-st_write(re_hist, "Shapefiles/biome_re_utility/Qld_RE_utility_historical.shp")
+names(re_hist) <- c("Bioregion", "ID_tabl", "RE1", "Tr_utlty", "n_ktreesp", "area_ha", "Euc_pres", "nREpols", "recnocc", "histnocc",
+                    "recnkpols", "recpkpols", "histnkpols", "histpkpols", "histREstbl", "histREindex", "geometry")
+st_write(re_hist, "Shapefiles/biome_re_utility/Qld_RE_utility_historical.shp", append=FALSE)
 
 ##############################
 #Write merged .csv for experts to evaluate
