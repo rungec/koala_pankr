@@ -55,7 +55,7 @@ k_fix <- k_fix %>% mutate(qld_notseq = case_when(cellid %in% seq_fix$cellid ~ 0,
 k_fix <- k_fix %>% 
   mutate(habitat_rank_qld = case_when(re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0 | climate_Current_perc95ofrecords > 3) ~ 10,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0 | climate_Current_perc95ofrecords > 3) ~ 9,
-                                      re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0 | climate_Current_perc95ofrecords > 3) ~ 8,
+                                      re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.444 | snes_likelyhabitat_ha > 0 | climate_Current_perc95cofrecords > 3) ~ 8,
                                       re_suitable_1_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0 | climate_Current_perc99ofrecords > 3) & (historic_koala|current_koala > 0) ~ 7,
                                       re_suitable_12_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0 | climate_Current_perc99ofrecords > 3) & (historic_koala|current_koala > 0) ~ 6,
                                       re_suitable_3_ha_qld > 0 & (complexsdm_value > 0.3925 | snes_maybehabitat_ha > 0 | climate_Current_perc99ofrecords > 3) & (historic_koala|current_koala > 0) ~ 5,
@@ -100,8 +100,8 @@ k_fix <- k_fix %>% mutate(habitat_area_total = case_when(habitat_area_total > 10
 
 ###########################
 #add column ranking environmental suitablility
-k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 | complexsdm_value > 0.444 ~ "likely",
-                                                   (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) | complexsdm_value > 0.3925 ~ "possible",
+k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 | complexsdm_value > 0.444 | climate_Current_perc95ofrecords > 3 ~ "likely",
+                                                   (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) | complexsdm_value > 0.3925 | climate_Current_perc99ofrecords > 3 ~ "possible",
                                                    TRUE ~ "not suitable"))
 
 ###########################
