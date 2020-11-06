@@ -17,9 +17,8 @@ current_koala <- st_read(currkoaladir) %>%
   st_transform(3577) %>%
   st_buffer(1000) %>% st_geometry()
 
-#Function for loading
+#loads an RData file, and allows it to be assigned a variable name
 loadRData <- function(fileName){
-  #loads an RData file, and returns it
   load(fileName)
   get(ls()[ls() != "fileName"])
 }
@@ -108,7 +107,7 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
       df <- rbind(df, d)
       }
 
-    print("finished")
+    print(paste0("finished scenario ", i))
     }
     write.csv(df, paste0(oupdir, testid, "Cluster_threshold_sensitivity_", datatitle, "_", area_type, ".csv"))  
     return(df)
