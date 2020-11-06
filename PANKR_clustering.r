@@ -42,11 +42,30 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
   #iterate over each scenario
   for (i in 1:nscenarios){
       curr_scenario <- names(data)[i]
-      area_scenario <- paste0(curr_scenario, "_ha")
       
+      #select the type of area we want to base our decisions on (habitat or planning units)
+      if(area_type == "habitat") {
+        
+        area_scenario <- paste0(curr_scenario, "_ha")
+        #union and dissolve the planning units, selecting only the rows in the current scenario
+        curr_pols <- data %>% 
+          dplyr::select(all_of(c(curr_scenario, area_scenario))) %>% filter(.data[[curr_scenario]]==1) 
+        curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
+          st_cast("POLYGON") 
+        clumps <- unlist(st_intersects(curr_pols, curr_union))
+        #make a table listing the pus in the current scenario and which clump they fall within
+        curr_pols <- cbind(curr_pols, clumps)
+        curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
+        
+        #group by clumps and summarise area for each clump
+        clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(.data[[area_scenario]], na.rm=TRUE),
+                                                                   curr_koala = sum(curr_koala)) %>% ungroup()
+        
+      } else if (area_type == "pu") {
+        
       #union and dissolve the planning units, selecting only the rows in the current scenario
       curr_pols <- data %>% 
-                dplyr::select(all_of(c(curr_scenario, area_scenario))) %>% filter(.data[[curr_scenario]]==1) 
+                dplyr::select(all_of(c(curr_scenario))) %>% filter(.data[[curr_scenario]]==1) 
       curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
                 st_cast("POLYGON") 
       clumps <- unlist(st_intersects(curr_pols, curr_union))
@@ -56,17 +75,10 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
       #calculate areas
       curr_pols <- curr_pols %>% mutate(area_ha = as.numeric(st_area(.)/10000))
       curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
-      
+        
       #group by clumps and summarise area for each clump
-      clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_habitat_ha = sum(.data[[area_scenario]], na.rm=TRUE),
-                                                         area_pu_ha = sum(area_ha, na.rm=TRUE),
-                                                         curr_koala = sum(curr_koala)) %>% ungroup()
-      
-      #select the type of area we want to base our decisions on (habitat or planning units)
-      if(area_type == "habitat") {
-        clump_pols <- clump_pols %>% mutate(area_col = area_habitat_ha)
-      } else if (area_type == "pu"){
-        clump_pols <- clump_pols %>% mutate(area_col = area_pu_ha)
+      clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(area_ha, na.rm=TRUE),
+                                                                   curr_koala = sum(curr_koala)) %>% ungroup()
       }
       
       #drop clumps smaller than min_area
