@@ -12,16 +12,17 @@ testid <- "Test4/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
 #####################
-#load data k_grid
-filelist <- list.files("Gridded_data/intermediate4/", pattern="_raw_100ha.Rdata", full.names=TRUE)
-for(currfile in filelist){
-  load(currfile)
-}
-
 #load and extract koala occurrence 
 current_koala <- st_read(currkoaladir) %>% 
   st_transform(3577) %>%
   st_buffer(1000) %>% st_geometry()
+
+#Function for loading
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
 
 #####################
 #Set up function
@@ -29,10 +30,16 @@ current_koala <- st_read(currkoaladir) %>%
 #it then drops clusters smaller than a given area, define in min_area_list
 #this function can either drop clusters based on the area of habitat in a cluster or the area of planning units in a cluster
 #use area_type="habitat" or "pu"
-clusterFun <- function(data, datatitle, min_area_list, oupdir, area_type, ...){
-  df <- data.frame()
-  nscenarios=(ncol(data)-1)/2
+clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
+  #load data
+  data <- loadRData(paste0("Gridded_data/intermediate4/koala_", dataname, "_raw_100ha.Rdata"))
   data <- data %>% st_transform(3577) #GDA94 Albers
+  #set up variables
+  datatitle <- str_to_title(strsplit(dataname, "_")[[1]][1])
+  nscenarios=(ncol(data)-1)/2
+  df <- data.frame()
+  
+  #iterate over each scenario
   for (i in 1:nscenarios){
       curr_scenario <- names(data)[i]
       area_scenario <- paste0(curr_scenario, "_ha")
@@ -97,17 +104,17 @@ clusterFun <- function(data, datatitle, min_area_list, oupdir, area_type, ...){
 
 #####################  
 #Run Clusters, dropping clusters by the area of planning units
-d1a <- clusterFun(known_pankr, datatitle="Known", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d1b <- clusterFun(known2_pankr, datatitle="Known2", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d1c <- clusterFun(known3_pankr, datatitle="Known3", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d2a <- clusterFun(recovery_pankr, datatitle="Recovery", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d2b <- clusterFun(recovery2_pankr, datatitle="Recovery2", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3a <- clusterFun(lost_pankr, datatitle="Lost", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3b <- clusterFun(lost_pankr2, datatitle="Lost2", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3c <- clusterFun(lost_pankr3, datatitle="Lost3", min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-# d3 <- clusterFun(bushfire_pankr, datatitle="Bushfire", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
-# d4 <- clusterFun(drought_refugia, datatitle="Drought", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
-# d5 <- clusterFun(climate_refugia, datatitle="Climate", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d1a <- clusterFun('known_pankr', min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d2a <- clusterFun('recovery_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d2b <- clusterFun('recovery2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+# d3 <- clusterFun('bushfire_pankr', datatitle="Bushfire", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+# d4 <- clusterFun('drought_refugia', datatitle="Drought", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+# d5 <- clusterFun('climate_refugia', datatitle="Climate", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 
 #d_all <- rbind(d1, d2, d3, d4, d5, d1b, d2b) 
 d_all_p <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4) 
@@ -115,15 +122,15 @@ d_all_spread <- d_all_p %>% pivot_wider(names_from = keep_polygons_bigger_than, 
 write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_pu.csv"))
 
 #Run clusters, dropping clusters by the area of koala habitat
-d1a <- clusterFun(known_pankr, datatitle="Known", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d1b <- clusterFun(known2_pankr, datatitle="Known2", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d1c <- clusterFun(known3_pankr, datatitle="Known3", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d2a <- clusterFun(recovery_pankr, datatitle="Recovery", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d2b <- clusterFun(recovery2_pankr, datatitle="Recovery2", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d3a <- clusterFun(lost_pankr, datatitle="Lost", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d3b <- clusterFun(lost_pankr2, datatitle="Lost2", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d3c <- clusterFun(lost_pankr3, datatitle="Lost3", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d4 <- clusterFun(monitoring_pankr, datatitle="Monitoring", min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d1a <- clusterFun('known_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d2a <- clusterFun('recovery_pankr', min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d2b <- clusterFun('recovery2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d4 <- clusterFun('monitoring_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 
 d_all_h <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4) 
 d_all_spread <- d_all_h %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
