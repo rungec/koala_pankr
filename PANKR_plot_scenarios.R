@@ -12,15 +12,17 @@ oupdir <- "Clusters/"
 testid <- "Test4/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
-#####################
-#load data k_grid
-filelist <- list.files("Gridded_data/intermediate4/", pattern="_raw_100ha.Rdata", full.names=TRUE)
-for(currfile in filelist){
-  load(currfile)
+#Function for loading
+#loads an RData file, and allows it to be assigned a variable name
+loadRData <- function(fileName){
+  load(fileName)
+  get(ls()[ls() != "fileName"])
 }
 
 ####################
-#Plot known2 and recovery2 scenario
+#Plot planning units that meet criteria in each scenario
+####################
+#Load shapefiles
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[5])
 region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
 nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
@@ -28,32 +30,35 @@ nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
 seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
 seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
 
+#FUNCTION
 plotfun <- function(nscenarios, plottitle, sub, ...) {
-  for (i in 1:nscenarios){
-    load(paste0(oupdir, testid, "data/", plottitle, "_scenario_", i, "_clusterthresh_0ha.Rdata"))
-    data <- curr_filter %>% mutate(plotid = 1)
+  for (i in nscenarios){
+    data <- loadRData(paste0(oupdir, testid, "data/", plottitle, "_scenario_", i, "_clusterthresh_pu_0ha.Rdata"))
+    data <- data %>% mutate(plotid = 1)
     
-    if(sub=="nsw"){
+    if("nsw" %in% sub){
       p <- tm_shape(region, bbox=nsw_region) + 
         tm_fill(palette="grey90") +
         tm_shape(data) +
-        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2], ...) +
         tm_shape(region) + tm_borders() +
         tm_layout(frame=FALSE)
-      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_nswe_scenario_", i, ".png"), height=1072, width=716)
-    } else if(sub=="seq") {
+      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_nswe.png"), height=1072, width=716)
+    } 
+    if("seq" %in% sub) {
       p <- tm_shape(region, bbox=seq_region) + 
         tm_fill(palette="grey90") +
         tm_shape(data) +
-        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', colorNA="grey90", palette=greypal[2], ...) +
         tm_shape(region) + tm_borders() + 
         tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
-      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_seq_scenario_", i, ".png"), height=1072, width=1056)
-    } else {
+      tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_seq.png"), height=1072, width=1056)
+    } 
+    if ("wholerange" %in% sub) {
       p <- tm_shape(region) + 
         tm_fill(palette="grey90") +
         tm_shape(data) +
-        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', labels=c("Meets criteria"), legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2]) +
+        tm_fill(col='plotid', title=paste0(plottitle, ": Scenario ", i), style='cat', legend.position=c("top", "right"), colorNA="grey90", palette=greypal[2], ...) +
         tm_shape(region) + tm_borders() +
         tm_layout(frame=FALSE)
       tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, ".png"), height=1920, width=1080)
@@ -61,24 +66,72 @@ plotfun <- function(nscenarios, plottitle, sub, ...) {
   }} 
 
 
-plotfun(nscenarios=10, plottitle="Known", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=10, plottitle="Known2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery2", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:10, plottitle="Known", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:10, plottitle="Known2", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:10, plottitle="Known3", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Recovery", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Recovery2", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost2", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost3", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
 
-plotfun(nscenarios=10, plottitle="Known", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=10, plottitle="Known2", sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery2",sub="nsw", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-
-plotfun(nscenarios=10, plottitle="Known", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=10, plottitle="Known2", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=6, plottitle="Recovery2", sub="seq", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 
 ####################
+#Plot scenarios comparing area thresholds
+####################
+#Load shapefiles
+greypal <- c("white", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
+# region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
+# nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
+# nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
+# seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
+# seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
+
+#FUNCTION
+plotfun <- function(nscenarios, plottitle, sub, area_type, ...) {
+  for (i in nscenarios){
+    data <- loadRData(paste0(oupdir, testid, "data/", plottitle, "_scenario_", i, "_clusterthresh_", area_type, "_0ha.Rdata"))
+
+  if("nsw" %in% sub){
+    p <- tm_shape(region, bbox=nsw_region) + 
+      tm_fill(palette="grey90") +
+      tm_shape(data) +
+      tm_fill(col='area_col', title=paste0("Area", area_type, "(ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
+      tm_shape(region) + tm_borders() +
+      tm_layout(frame=FALSE)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_nswe_area_threshold_", area_type, ".png"), height=1072, width=716)
+  } 
+    if("seq" %in% sub) {
+    p <- tm_shape(region, bbox=seq_region) + 
+      tm_fill(palette="grey90") +
+      tm_shape(data) +
+      tm_fill(col='area_col', title=paste0("Area", area_type, "(ha)"), colorNA="grey90", ...) +
+      tm_shape(region) + tm_borders() + 
+      tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_seq_area_threshold_", area_type, ".png"), height=1072, width=1056)
+  } 
+    if("wholerange" %in% sub) {
+    p <- tm_shape(region) + 
+      tm_fill(palette="grey90") +
+      tm_shape(data) +
+      tm_fill(col='area_col', title=paste0("Area", area_type, "(ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
+      tm_shape(region) + tm_borders() +
+      tm_layout(frame=FALSE)
+    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_area_threshold_", area_type, ".png"), height=1920, width=1080)
+  }  
+} }
+
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="pu", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known2", sub=c("wholerange", "nsw", "seq"), area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known2", sub=c("wholerange", "nsw", "seq"), area_type="pu", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost3", sub="wholerange", area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+
+##########################
 #Plot adaptation scenarios
-####################################
+##########################
 
 plotfun <- function(dataname, plottitle, ...) {
   data <- load(paste0(oupdir, "Test1/koala_", dataname, "_raw_100ha.Rdata"))
@@ -101,65 +154,6 @@ region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_
 # plotfun("drought_refugia", plottitle="Drought refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 # plotfun("climate_refugia", plottitle="Climate refugia", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
 # plotfun("climate_current", plottitle="Current climate", palette=greypal, style='cat', labels=c("Not selected", "Meets criteria"), showNA=FALSE)
-
-
-####################
-#Plot maps of NIKA comparing area thresholds
-plotfun <- function(currscenario, plottitle, sub, ...) {
-  load(paste0(oupdir, testid, "data/", plottitle, "_scenario_", currscenario, "_clusterthresh_0ha.Rdata"))
-  if(sub=="nsw"){
-    p <- tm_shape(region, bbox=nsw_region) + 
-      tm_fill(palette="grey90") +
-      tm_shape(curr_filter) +
-      tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders() +
-      tm_layout(frame=FALSE)
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_nswe_scenario_", currscenario, ".png"), height=1072, width=716)
-  } else if(sub=="seq") {
-    p <- tm_shape(region, bbox=seq_region) + 
-      tm_fill(palette="grey90") +
-      tm_shape(curr_filter) +
-      tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders() + 
-      tm_layout(legend.outside=TRUE, legend.outside.position="right", frame=FALSE)
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_seq_scenario_", currscenario, ".png"), height=1072, width=1056)
-  } else {
-    p <- tm_shape(region) + 
-      tm_fill(palette="grey90") +
-      tm_shape(curr_filter) +
-      tm_fill(col='area_ha', title=paste0("Area (ha)"), legend.position=c("top", "right"), colorNA="grey90", ...) +
-      tm_shape(region) + tm_borders() +
-      tm_layout(frame=FALSE)
-    tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_area_thresholds_scenario_", currscenario, ".png"), height=1920, width=1080)
-  }  
-} 
-greypal <- c("white", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
-region <- st_read(paste0(dirname(getwd()),"/Data_inp/IBRA7_regions_states_koala_dissolve.shp"))
-nsw_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/NSW/KMRs_eastern.shp"))
-nsw_region <- st_bbox(nsw_region, crs=st_crs(nsw_region))
-seq_region <- st_read(paste0(dirname(getwd()),"/Data_inp/Habitat_maps/SEQ/SEQRP_study_area.shp"))
-seq_region <- st_bbox(seq_region, crs=st_crs(seq_region))
-
-
-plotfun(currscenario=5, plottitle="Known", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=5, plottitle="Known", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=5, plottitle="Known", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=5, plottitle="Known2", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=5, plottitle="Known2", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=5, plottitle="Known2", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-
-plotfun(currscenario=9, plottitle="Known", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=9, plottitle="Known", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=9, plottitle="Known", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=9, plottitle="Known2", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=9, plottitle="Known2", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=9, plottitle="Known2", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known2", sub="NA", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known2", sub="nsw", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
-plotfun(currscenario=10, plottitle="Known2", sub="seq", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
 
 
 ###END
