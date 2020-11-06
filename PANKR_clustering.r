@@ -63,22 +63,22 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
         
       } else if (area_type == "pu") {
         
-      #union and dissolve the planning units, selecting only the rows in the current scenario
-      curr_pols <- data %>% 
-                dplyr::select(all_of(c(curr_scenario))) %>% filter(.data[[curr_scenario]]==1) 
-      curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
-                st_cast("POLYGON") 
-      clumps <- unlist(st_intersects(curr_pols, curr_union))
-      #make a table listing the pus in the current scenario and which clump they fall within
-      curr_pols <- cbind(curr_pols, clumps)
-      
-      #calculate areas
-      curr_pols <- curr_pols %>% mutate(area_ha = as.numeric(st_area(.)/10000))
-      curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
+        #union and dissolve the planning units, selecting only the rows in the current scenario
+        curr_pols <- data %>% 
+                  dplyr::select(all_of(c(curr_scenario))) %>% filter(.data[[curr_scenario]]==1) 
+        curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
+                  st_cast("POLYGON") 
+        clumps <- unlist(st_intersects(curr_pols, curr_union))
+        #make a table listing the pus in the current scenario and which clump they fall within
+        curr_pols <- cbind(curr_pols, clumps)
         
-      #group by clumps and summarise area for each clump
-      clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(area_ha, na.rm=TRUE),
-                                                                   curr_koala = sum(curr_koala)) %>% ungroup()
+        #calculate areas
+        curr_pols <- curr_pols %>% mutate(area_ha = as.numeric(st_area(.)/10000))
+        curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
+          
+        #group by clumps and summarise area for each clump
+        clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(area_ha, na.rm=TRUE),
+                                                                     curr_koala = sum(curr_koala)) %>% ungroup()
       }
       
       #drop clumps smaller than min_area
