@@ -1,6 +1,5 @@
-#This file takes a .shp that has columns indicating which type of PANKR each polygon is categorised as
-#It clumps polygons of the same class, and removes isolated polygons and clumps that are too small
-#follows on from PANKR_categorise.r
+#This file plots different scenarios for types of important koala areas
+#follows on from PANKR_categorise.r and PANKR_clustering.r
 
 library(sf)
 library(tidyverse)
