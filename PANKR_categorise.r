@@ -61,7 +61,14 @@ lost_pankr <- k_fix %>%
          scenario_3 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
          scenario_4 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc99ofrecords < 7 ~ 1, TRUE ~ 0),
-         scenario_6 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+         scenario_6 = case_when(current_koala > 0 & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) 
+lost_pankr <- lost_pankr %>% 
+  mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_2_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_3_ha = case_when(scenario_2==1  ~ habitat_area_total, TRUE ~ 0),
+         scenario_4_ha = case_when(scenario_3==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_5_ha = case_when(scenario_4==1~ habitat_area_total, TRUE ~ 0),
+         scenario_6_ha = case_when(scenario_5==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(lost_pankr, file=paste0(oupdir, "koala_lost_pankr_raw_", cell_area, ".Rdata"))
 
@@ -120,7 +127,14 @@ lost2_pankr <- k_fix %>%
          scenario_3 = case_when(habitat_area_total > 30 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
          scenario_4 = case_when(habitat_area_total > 30 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
          scenario_5 = case_when(habitat_area_total > 30 & climate_2070_perc99ofrecords < 7 ~ 1, TRUE ~ 0),
-         scenario_6 = case_when(habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+         scenario_6 = case_when(habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) 
+lost2_pankr <- lost2_pankr %>% 
+  mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_2_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_3_ha = case_when(scenario_2==1  ~ habitat_area_total, TRUE ~ 0),
+         scenario_4_ha = case_when(scenario_3==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_5_ha = case_when(scenario_4==1~ habitat_area_total, TRUE ~ 0),
+         scenario_6_ha = case_when(scenario_5==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(lost2_pankr, file=paste0(oupdir, "koala_lost2_pankr_raw_", cell_area, ".Rdata"))
 
