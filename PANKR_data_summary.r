@@ -109,12 +109,15 @@ k_dat %>% filter(pawc_mean>77 ) %>% nrow()
 region <- st_read(paste0(datadir, "IBRA7_regions_states_koala_dissolve.shp"))
 oupdir <- "Output/figures/variables/"
 
-plotfun <- function(data, colid, plottitle, ...) {
+plotfun <- function(data, colid, plottitle, save_tif, fig_num, ...) {
     p <- tm_shape(data) +
       tm_fill(col=colid, title=plottitle, legend.position=c("top", "right"), colorNA="grey90", ...) +
       tm_shape(region) + tm_borders() +
-      tm_layout(frame=FALSE)
+      tm_layout(frame=FALSE, title=fig_num)
   tmap_save(p, paste0(oupdir, colid, ".png"), height=1920, width=1080)
+  if(save_tif==TRUE){
+  tmap_save(p, paste0(oupdir, colid, ".tiff"), height=1920, width=1080)
+  }
 }
 greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
 
@@ -146,29 +149,46 @@ plotfun(k_fix, colid="dist2histkoala", plottitle="Nearest sighting", style='cat'
 
 
 ###############
-#Comparing the habitat models
+#Comparing the sdm models
 k_fix <- k_fix %>% mutate(complex_diff = case_when(complexsdm_value < 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 1,
                                                    complexsdm_value >= 0.444 & complexsdm_interpolatedvalue < 0.444 ~ 2,
                                                    complexsdm_value >= 0.444 & complexsdm_interpolatedvalue >= 0.444 ~ 3))
 table(k_fix$complex_diff)
-diffpal <- c("red", "yellow", RColorBrewer::brewer.pal(5, "YlGnBu")[3])
+diffpal <- c(RColorBrewer::brewer.pal(5, "YlGnBu"), "red", "yellow", )
 plotfun(k_fix, colid="complex_diff", plottitle="Difference between complex sdm summaries", breaks=c(0,1.1,2.1,3.1), labels=c("interpolated not centroid", "centroid not interpolated", "both"), palette=diffpal, showNA=FALSE)
 
-k_fix <- k_fix %>% mutate(snes_complex_diff = case_when((snes_likelyhabitat_ha == 0 & snes_maybehabitat_ha == 0) & complexsdm_value >= 0.444 ~ 1,
-                                                        (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value < 0.444 ~ 2,
-                                                        (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) & complexsdm_value >= 0.444 ~ 3))
-table(k_fix$snes_complex_diff)
-k_fix <- k_fix %>% mutate(snes_complex_diff2 = case_when(snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.444 ~ 1,
-                                                        snes_likelyhabitat_ha > 0 & complexsdm_value < 0.444 ~ 2,
-                                                        snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.444 ~ 3))
-table(k_fix$snes_complex_diff2)
-k_fix <- k_fix %>% mutate(snes_complex_diff3 = case_when(snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.3925 ~ 1,
-                                                        snes_likelyhabitat_ha > 0 & complexsdm_value < 0.3925 ~ 2,
-                                                        snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.3925 ~ 3))
-table(k_fix$snes_complex_diff3)
-plotfun(k_fix, colid="snes_complex_diff", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
-plotfun(k_fix, colid="snes_complex_diff3", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
-plotfun(k_fix, colid="snes_complex_diff2", plottitle="Difference", breaks=c(0,1.1,2.1,3.1), labels=c("complex not snes", "snes not complex", "both"), palette=diffpal, showNA=FALSE)
+#difference in medium class
+k_fix <- k_fix %>% mutate(sdms_medium_diff = case_when(climate_2070_perc99ofrecords > 3 & complexsdm_value >= 0.3925 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0)  ~ 4, #all
+                                                       climate_2070_perc99ofrecords > 3 & complexsdm_value < 0.3925 & snes_likelyhabitat_ha == 0 & snes_maybehabitat_ha == 0 ~ 3, #briscoe only
+                                                       climate_2070_perc99ofrecords < 4 & complexsdm_value < 0.3925 & (snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0) ~ 2, #snes only
+                                                       climate_2070_perc99ofrecords > 3 | complexsdm_value >= 0.3925 | snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0 ~ 1)) #any
+table(k_fix$sdms_medium_diff)
+#difference in high class
+k_fix <- k_fix %>% mutate(sdms_high_diff = case_when(climate_2070_perc95ofrecords > 3 & snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.444 ~ 2, #all
+                                                     #climate_2070_perc95ofrecords > 3 & snes_likelyhabitat_ha > 0 & complexsdm_value < 0.444 ~ 7, #briscoe & snes
+                                                     #climate_2070_perc95ofrecords > 3 & snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.444 ~ 6, #briscoe & complex
+                                                     #climate_2070_perc95ofrecords < 4 & snes_likelyhabitat_ha > 0 & complexsdm_value >= 0.444 ~ 5, #complex & snes
+                                                     #climate_2070_perc95ofrecords > 3 & snes_likelyhabitat_ha < 0 & complexsdm_value < 0.444 ~ 4, #complex only
+                                                     #climate_2070_perc95ofrecords < 4 & snes_likelyhabitat_ha > 0 & complexsdm_value < 0.444 ~ 3, #briscoe only
+                                                     #climate_2070_perc95ofrecords < 4 & snes_likelyhabitat_ha == 0 & complexsdm_value >= 0.444 ~ 2, #snes only
+                                                     climate_2070_perc95ofrecords > 3 | snes_likelyhabitat_ha > 0 | complexsdm_value >= 0.444 ~ 1)) #any
+
+table(k_fix$sdms_high_diff)
+
+#environmentally suitable classes
+k_fix <- k_fix %>% mutate(env_suitable = case_when(climate_2070_perc95ofrecords > 3 | snes_likelyhabitat_ha > 0 | complexsdm_value >= 0.444 ~ 3, #high
+                                                     climate_2070_perc99ofrecords > 3 | snes_likelyhabitat_ha > 0 | snes_maybehabitat_ha > 0 | complexsdm_value >= 0.3925 ~ 2, #medium
+                                                   TRUE ~ 1)) #low
+table(k_fix$env_suitable)
+
+diffpal <- c(RColorBrewer::brewer.pal(5, "YlGnBu")[3], "yellow", "red", RColorBrewer::brewer.pal(5, "YlGnBu")[4])
+plotfun(k_fix, colid="sdms_medium_diff", fig_num=c("(c)"), save_tif=TRUE, plottitle="Predicted as suitable", breaks=c(0,1.1,2.1,3.1, 4.1), labels=c("Any model", "SNES only", "Briscoe only", "All models"), palette=diffpal, showNA=FALSE)
+
+diffpal <- c(RColorBrewer::brewer.pal(5, "YlGnBu")[c(3,4)])
+plotfun(k_fix, colid="sdms_high_diff",  fig_num=c("(b)"), save_tif=TRUE, plottitle="Predicted as suitable", breaks=c(0,1.1,2.1), labels=c("Any model", "All models"), palette=diffpal, showNA=FALSE)
+
+greypal <- c("grey90", RColorBrewer::brewer.pal(5, "YlGnBu")[c(3,5)]) 
+plotfun(k_fix, colid="env_suitable", fig_num=c("(a)"), save_tif=TRUE, plottitle="Suitability", breaks=c(0, 1.1, 2.1, 3.3), labels=c("Low", "Medium", "High"), palette=greypal, showNA=FALSE)
 
 #################################
 #Map habitat by region
