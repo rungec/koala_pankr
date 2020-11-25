@@ -48,11 +48,11 @@ k_tmp <- k_fix %>% st_set_geometry(NULL) %>% select(cellid)
 
 joinfun <- function(biome){
   for(i in 1:3){
-  if(biome=="Brigalow_Belt"){
-  re <- st_read(paste0("D:/Box Sync/GPEM_Postdoc/Koala_NESP/06_Analysis/Sofia/Qld_habitat/Task1/", biome, "_RE", i, "_PU.shp"))
-  } else {
-  re <- st_read(paste0("D:/Box Sync/GPEM_Postdoc/Koala_NESP/06_Analysis/Sofia/Qld_habitat/Task1/", biome, "_PU_RE", i, "_PU.shp")) 
-  }
+  filelist <- list.files("D:/Box Sync/GPEM_Postdoc/Koala_NESP/06_Analysis/Sofia/Qld_habitat/Task1/", pattern=".shp$", full.names=TRUE)
+  currshp <- grep(pattern=biome, filelist, value=TRUE)
+  currshp <- grep(pattern=paste0("RE",i), currshp, value=TRUE)
+  re <- st_read(currshp)
+  
   re <- re %>% st_set_geometry(NULL) %>% 
     filter(!cellid==0) %>% 
     filter(habitat==1) 
@@ -76,7 +76,7 @@ k_tmp <- joinfun("Mitchell_Grass")
 k_tmp <- joinfun("Mulga_Lands")
 k_tmp <- joinfun("New_England")
 k_tmp <- joinfun("Wet_trop")
-k_tmp <- joinfun("seq")
+k_tmp <- joinfun("SEQ")
 
 k_agg <- k_tmp %>% rowwise() %>% mutate(re_suitable_1_ha_qld = sum(across(contains("re1_area")), na.rm=TRUE),
                                         habitat_present_1_qld = sum(across(contains("re1_habitat")), na.rm=TRUE),
