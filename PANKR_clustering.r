@@ -8,8 +8,9 @@ library(ggplot2)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters/"
-testid <- "Test4/"
+testid <- "Test5/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
+histkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_1970to2000_1kmres_noDup.shp")
 
 #####################
 #load and extract koala occurrence 
