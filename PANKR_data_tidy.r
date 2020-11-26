@@ -106,20 +106,7 @@ k_fix <- k_fix %>% mutate(env_suitable = case_when(snes_likelyhabitat_ha > 0 | c
 
 ###########################
 #change the order of columns
-k_fix <- k_fix %>% relocate(complexsdm_value:complexsdm_interpolatedvalue, .after=snes_likelyhabitat_ha)
-k_fix <- k_fix %>% relocate(nsw_eastern, .after=qld_notseq)
-k_fix <- k_fix %>% relocate(nsw_western, .after=nsw_eastern)
-k_fix <- k_fix %>% relocate(habitat_area_ha_nsw_west_ess:habitat_area_ha_nsw_west_maxk, .after=habitat_area_ha_nsw_123)
-k_fix <- k_fix %>% relocate(habitat_present:habitat_present_s2, .after=nsw_western)
-k_fix <- k_fix %>% relocate(habitat_area_total:habitat_area_total_s2, .after=habitat_present_s2)
-k_fix <- k_fix %>% relocate(snes_maybehabitat_ha:complexsdm_interpolatedvalue, .after=habitat_area_ha_nsw_west_maxk)
-k_fix <- k_fix %>% relocate(re_suitable_1_ha_qld:habitat_rank_qld, .after=complexsdm_interpolatedvalue)
-k_fix <- k_fix %>% relocate(habitat_area_ha_qld:habitat_area_ha_qld_s2, .after=habitat_area_ha_seq)
-k_fix <- k_fix %>% relocate(habitat_area_ha_nswe:habitat_area_ha_nswe_123, .after=habitat_area_ha_nsw_123)
-k_fix <- k_fix %>% relocate(re_suitable_3_ha_qld, .after=re_suitable_2_ha_qld)
-k_fix <- k_fix %>% relocate(env_suitable, .before=snes_maybehabitat_ha)
-k_fix <- k_fix %>% relocate(dist2currkoala, .after=current_koala)
-k_fix <- k_fix %>% relocate(dist2histkoala, .after=historic_koala)
+k_fix <- k_fix %>% relocate(pawc_mean:permanent_water_area_ha, .after=habitat_present_3_ha_qld)
 k_fix <- k_fix %>% ungroup()
 
 k_fix <- st_sf(k_fix)

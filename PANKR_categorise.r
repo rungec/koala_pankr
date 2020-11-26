@@ -183,7 +183,16 @@ lost3_pankr <- k_fix %>%
          scenario_5 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 50 & climate_2070_perc95ofrecords < 7 ~ 1, TRUE ~ 0),
          scenario_6 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 50 & climate_2070_perc95ofrecords < 12 ~ 1, TRUE ~ 0),
          scenario_7 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0),
-         scenario_8 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) %>%
+         scenario_8 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 30 & climate_2070_perc99ofrecords < 12 ~ 1, TRUE ~ 0)) 
+lost3_pankr <- lost3_pankr %>% 
+  mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_2_ha = case_when(scenario_2==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_3_ha = case_when(scenario_3==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_4_ha = case_when(scenario_4==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_5_ha = case_when(scenario_5==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_6_ha = case_when(scenario_6==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_7_ha = case_when(scenario_7==1 ~ habitat_area_total, TRUE ~ 0),
+         scenario_8_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(lost3_pankr, file=paste0(oupdir, "koala_lost3_pankr_raw_", cell_area, ".Rdata"))
   
@@ -206,7 +215,7 @@ save(lost3_pankr, file=paste0(oupdir, "koala_lost3_pankr_raw_", cell_area, ".Rda
 #   dplyr::select(starts_with('scenario'))
 # save(drought_refugia, file=paste0(oupdir, "koala_drought_refugia_raw_", cell_area, ".Rdata")) 
 # 
-climate_refugia <- k_fix %>%
+climate_suitable<- k_fix %>%
  mutate(scenario_1 = case_when(climate_2070_perc90ofrecords==12 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
         scenario_2 = case_when(climate_2070_perc95ofrecords==12 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
         scenario_3 = case_when(climate_2070_perc99ofrecords==12 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
@@ -220,7 +229,7 @@ climate_refugia <- k_fix %>%
         scenario_11 = case_when(climate_2070_perc95ofrecords > 6 & habitat_area_total > 30 ~ 1, TRUE ~ 0),
         scenario_12 = case_when(climate_2070_perc99ofrecords > 6 & habitat_area_total > 30 ~ 1, TRUE ~ 0)) %>%
  dplyr::select(starts_with('scenario'))
-save(climate_refugia, file=paste0(oupdir, "koala_climate_refugia_raw_", cell_area, ".Rdata"))
+save(climate_suitable, file=paste0(oupdir, "koala_climate_suitable_raw_", cell_area, ".Rdata"))
 
 # climate_current <- k_fix %>%
 #   mutate(scenario_1 = case_when(climate_Current_perc90ofrecords==6 ~ 1, TRUE ~ 0),
