@@ -32,11 +32,16 @@ loadRData <- function(fileName){
 #use area_type="habitat" or "pu"
 clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
   #load data
-  data <- loadRData(paste0("Gridded_data/intermediate4/koala_", dataname, "_raw_100ha.Rdata"))
+  data <- loadRData(paste0("Gridded_data/intermediate5/koala_", dataname, "_raw_100ha.Rdata"))
   data <- data %>% st_transform(3577) #GDA94 Albers
   #set up variables
   datatitle <- str_to_title(strsplit(dataname, "_")[[1]][1])
-  nscenarios=(ncol(data)-1)/2
+  if("ha" %in% names(data)){
+    nscenarios=(ncol(data)-1)/2 
+  } else {
+    nscenarios=(ncol(data)-1)
+  }
+  
   df <- data.frame()
   
   #iterate over each scenario
@@ -48,22 +53,26 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
         
         area_scenario <- paste0(curr_scenario, "_ha")
         #union and dissolve the planning units, selecting only the rows in the current scenario
+        print("starting dissolve")
         curr_pols <- data %>% 
           dplyr::select(all_of(c(curr_scenario, area_scenario))) %>% filter(.data[[curr_scenario]]==1) 
         curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
           st_cast("POLYGON") 
+        
         clumps <- unlist(st_intersects(curr_pols, curr_union))
         #make a table listing the pus in the current scenario and which clump they fall within
         curr_pols <- cbind(curr_pols, clumps)
         curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
         
         #group by clumps and summarise area for each clump
+        print("starting clump")
         clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(.data[[area_scenario]], na.rm=TRUE),
                                                                    curr_koala = sum(curr_koala)) %>% ungroup()
         
       } else if (area_type == "pu") {
         
         #union and dissolve the planning units, selecting only the rows in the current scenario
+        print("starting dissolve")
         curr_pols <- data %>% 
                   dplyr::select(all_of(c(curr_scenario))) %>% filter(.data[[curr_scenario]]==1) 
         curr_union <- curr_pols %>%  st_union() %>%  #we then join adjacent polygons together
@@ -77,11 +86,13 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
         curr_pols <- curr_pols %>% mutate(curr_koala = lengths(st_intersects(curr_pols, current_koala, sparse=TRUE)))
           
         #group by clumps and summarise area for each clump
+        print("starting clump")
         clump_pols <- curr_pols %>% group_by(clumps) %>% summarise(area_col = sum(area_ha, na.rm=TRUE),
                                                                      curr_koala = sum(curr_koala)) %>% ungroup()
       }
       
       #drop clumps smaller than min_area
+      print("starting drop clumps")
       for(a in 1:length(min_area_list)){
         if(datatitle %in% c("Known2", "Lost2")){
           curr_filter <- clump_pols %>% filter(area_col > min_area_list[[a]] & curr_koala > 0)
@@ -90,7 +101,7 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
         } else { #for known and known3 scenarios
           curr_filter <- filter(clump_pols, area_col > min_area_list[[a]])
         }
-          if(nrow(curr_filter)>0) {
+        if(nrow(curr_filter)>0) {
             if(min_area_list[[a]]==0) {
             save(curr_filter, file=paste0(oupdir, testid, datatitle, "_", curr_scenario, "_clusterthresh_", area_type, "_", min_area_list[[a]], "ha.Rdata")) 
             #st_write(curr_filter, paste0(oupdir, testid, datatitle, "_", curr_scenario, "_clusterthresh_", area_type, "_", min_area_list[[a]], "ha.gpkg")) 
@@ -99,7 +110,7 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
                                                                   scenario = curr_scenario, 
                                                                   keep_polygons_bigger_than = min_area_list[[a]], 
                                                                   total_area_ha = sum(area_col)) 
-          } else {
+        } else {
             d <- data.frame(pankr_type = datatitle,
                             scenario = curr_scenario, 
                             keep_polygons_bigger_than = min_area_list[[a]], 
@@ -116,35 +127,34 @@ clusterFun <- function(dataname, min_area_list, oupdir, area_type, ...){
 
 #####################  
 #Run Clusters, dropping clusters by the area of planning units
-d1a <- clusterFun('known_pankr', min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d1a <- clusterFun('known_pankr', min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
 d2a <- clusterFun('recovery_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
 d2b <- clusterFun('recovery2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
-d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
+#d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "pu", oupdir = oupdir)
 # d3 <- clusterFun('bushfire_pankr', datatitle="Bushfire", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 # d4 <- clusterFun('drought_refugia', datatitle="Drought", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
-# d5 <- clusterFun('climate_refugia', datatitle="Climate", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d5 <- clusterFun('climate_suitable', datatitle="Climate", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d6 <- clusterFun('monitoring_pankr', datatitle="Monitoring", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 
-#d_all <- rbind(d1, d2, d3, d4, d5, d1b, d2b) 
-d_all_p <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4) 
+d_all_p <- rbind(d2a, d2b, d5, d6) 
+#d_all_p <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4, d5, d6) 
 d_all_spread <- d_all_p %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
 write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_pu.csv"))
 
 #Run clusters, dropping clusters by the area of koala habitat
-d1a <- clusterFun('known_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+#d1a <- clusterFun('known_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d2a <- clusterFun('recovery_pankr', min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d2b <- clusterFun('recovery2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+#d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-d4 <- clusterFun('monitoring_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 
-d_all_h <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4) 
+
+d_all_h <- rbind(d1a, d1b, d1c, d3a, d3b, d3c) 
 d_all_spread <- d_all_h %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
 write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_habitat.csv"))
 
