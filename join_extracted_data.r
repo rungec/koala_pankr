@@ -56,7 +56,7 @@ joinfun <- function(biome){
   re <- re %>% st_set_geometry(NULL) %>% 
     filter(!cellid==0) %>% 
     filter(habitat==1) 
-  names(re)[grep("Area", names(re))] <- "Area_ha"
+  names(re)[grep("AREA", names(re))] <- "Area_ha"
     re <- re %>% select(cellid, habitat, "Area_ha") %>% 
           group_by(cellid) %>% summarise(habitat = max(habitat),
                                           Area_ha = sum(Area_ha))
@@ -76,17 +76,20 @@ k_tmp <- joinfun("Mitchell_Grass")
 k_tmp <- joinfun("Mulga_Lands")
 k_tmp <- joinfun("New_England")
 k_tmp <- joinfun("Wet_trop")
-k_tmp <- joinfun("SEQ")
+k_tmp <- joinfun("SEQ_")
 
-k_agg <- k_tmp %>% rowwise() %>% mutate(re_suitable_1_ha_qld = sum(across(contains("re1_area")), na.rm=TRUE),
-                                        habitat_present_1_qld = sum(across(contains("re1_habitat")), na.rm=TRUE),
-                                        re_suitable_2_ha_qld = sum(across(contains("re2_area")), na.rm=TRUE),
-                                        habitat_present_2_qld = sum(across(contains("re2_habitat")), na.rm=TRUE),
-                                        re_suitable_3_ha_qld = sum(across(contains("re3_area")), na.rm=TRUE),
-                                        habitat_present_3_qld = sum(across(contains("re3_habitat")), na.rm=TRUE))
+k_mat <- as.matrix(k_tmp)
+k_mat[is.na(k_mat)] <- 0
+k_oup <- k_tmp %>% select(cellid)
+k_oup$re_suitable_1_ha_qld <- Rfast::rowsums(k_mat[, grep("re1_area", colnames(k_mat))])
+k_oup$habitat_present_1_ha_qld <- Rfast::rowsums(k_mat[, grep("re1_habitat", colnames(k_mat))])
+k_oup$re_suitable_2_ha_qld <- Rfast::rowsums(k_mat[, grep("re2_area", colnames(k_mat))])
+k_oup$habitat_present_2_ha_qld <- Rfast::rowsums(k_mat[, grep("re2_habitat", colnames(k_mat))])
+k_oup$re_suitable_3_ha_qld <- Rfast::rowsums(k_mat[, grep("re3_area", colnames(k_mat))])
+k_oup$habitat_present_3_ha_qld <- Rfast::rowsums(k_mat[, grep("re3_habitat", colnames(k_mat))])
 
 k_fix <- k_fix %>% select(!c(re_suitable_12_ha_qld, re_suitable_1_ha_qld, re_suitable_3_ha_qld, habitat_present_3_qld))
-k_fix <- k_fix %>% left_join(k_agg, by='cellid')
+k_fix <- k_fix %>% left_join(k_oup, by='cellid')
 
 ###################################
 save(k_fix, file=paste0(oupdir, "koala_gridded_vars_100ha_tidy_v2.Rdata"))
