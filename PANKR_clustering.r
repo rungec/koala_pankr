@@ -158,6 +158,10 @@ d_all_h <- rbind(d1a, d1b, d1c, d3a, d3b, d3c)
 d_all_spread <- d_all_h %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
 write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_habitat.csv"))
 
+d_all <- rbind(d1a, d2a, d2b, d3a, d3c, d5) 
+d_all_spread <- d_all %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)
+write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_tmp.csv"))
+
 #####################
 #Plot sensitivity to threshold
 p <- ggplot(d_all_p, aes(x=keep_polygons_bigger_than +1, y=total_area_ha, col=scenario)) +
