@@ -231,6 +231,29 @@ climate_suitable<- k_fix %>%
  dplyr::select(starts_with('scenario'))
 save(climate_suitable, file=paste0(oupdir, "koala_climate_suitable_raw_", cell_area, ".Rdata"))
 
+current_suitable<- k_fix %>%
+ mutate(scenario_1 = case_when(climate_Current_perc90ofrecords > 3 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+        scenario_2 = case_when(climate_Current_perc95ofrecords > 3 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+        scenario_3 = case_when(climate_Current_perc99ofrecords > 3 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+        scenario_4 = case_when(climate_Current_perc90ofrecords > 3 & habitat_area_total > 30 ~ 1, TRUE ~ 0),
+        scenario_5 = case_when(climate_Current_perc95ofrecords > 3 & habitat_area_total > 30 ~ 1, TRUE ~ 0),
+        scenario_6 = case_when(climate_Current_perc99ofrecords > 3 & habitat_area_total > 30 ~ 1, TRUE ~ 0)) %>%
+ dplyr::select(starts_with('scenario'))
+save(current_suitable, file=paste0(oupdir, "koala_current_suitable_raw_", cell_area, ".Rdata"))
+
+habitat_lost <- k_fix %>%
+  mutate(scenario_1 = case_when(climate_2070_perc95ofrecords < 4 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+          scenario_2 = case_when(climate_2070_perc95ofrecords < 6 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+          scenario_3 = case_when(climate_2070_perc90ofrecords < 4 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
+          scenario_4 = case_when(climate_2070_perc90ofrecords < 6 & habitat_area_total > 50 ~ 1, TRUE ~ 0))
+habitat_lost <- habitat_lost %>% 
+    mutate(scenario_1_ha = case_when(scenario_1==1 ~ habitat_area_total, TRUE ~ 0),
+           scenario_2_ha = case_when(scenario_2==1 ~ habitat_area_total, TRUE ~ 0),
+           scenario_3_ha = case_when(scenario_3==1 ~ habitat_area_total, TRUE ~ 0),
+           scenario_4_ha = case_when(scenario_4==1 ~ habitat_area_total, TRUE ~ 0)) %>%
+    dplyr::select(starts_with('scenario'))
+save(habitat_lost, file=paste0(oupdir, "koala_habitat_lost_raw_", cell_area, ".Rdata"))
+
 # climate_current <- k_fix %>%
 #   mutate(scenario_1 = case_when(climate_Current_perc90ofrecords==6 ~ 1, TRUE ~ 0),
 #          scenario_2 = case_when(climate_Current_perc95ofrecords==6 ~ 1, TRUE ~ 0),
