@@ -139,6 +139,9 @@ d2b <- clusterFun('recovery2_pankr',  min_area_list = list(0, 1000, 10000, 10000
 # d4 <- clusterFun('drought_refugia', datatitle="Drought", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 d5 <- clusterFun('climate_suitable', datatitle="Climate", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 d6 <- clusterFun('monitoring_pankr', datatitle="Monitoring", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d7 <- clusterFun('current_suitable', datatitle="Current", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d7 <- clusterFun('current_suitable', datatitle="Current", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d8a <- clusterFun('habitat_lost', datatitle="Lost", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 
 d_all_p <- rbind(d2a, d2b, d5, d6) 
 #d_all_p <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4, d5, d6) 
@@ -152,7 +155,7 @@ d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000),
 #d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
-
+d8b <- clusterFun('habitat_lost', min_area_list = list(0, 1000, 10000), area_type = "habitat", oupdir = oupdir)
 
 d_all_h <- rbind(d1a, d1b, d1c, d3a, d3b, d3c) 
 d_all_spread <- d_all_h %>% pivot_wider(names_from = keep_polygons_bigger_than, values_from = total_area_ha)

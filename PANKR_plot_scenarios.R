@@ -8,7 +8,7 @@ library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 oupdir <- "Clusters/"
-testid <- "Test4/"
+testid <- "Test5/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
 #Function for loading
@@ -65,15 +65,20 @@ plotfun <- function(nscenarios, plottitle, sub, ...) {
   }} 
 
 
-plotfun(nscenarios=1:10, plottitle="Known", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:12, plottitle="Climate", sub="wholerange", labels=c("Climate suitable"), showNA=FALSE)
+plotfun(nscenarios=1:10, plottitle="Known", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:10, plottitle="Known3", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:8, plottitle="Lost", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:8, plottitle="Lost3", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:4, plottitle="Habitat", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Recovery", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Recovery2", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+
 plotfun(nscenarios=1:10, plottitle="Known2", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:10, plottitle="Known3", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=1:6, plottitle="Recovery", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=1:6, plottitle="Recovery2", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
-plotfun(nscenarios=1:6, plottitle="Lost", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
 plotfun(nscenarios=1:6, plottitle="Lost2", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
-plotfun(nscenarios=1:6, plottitle="Lost3", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
-plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
 
 
 ####################
@@ -120,6 +125,18 @@ plotfun <- function(nscenarios, plottitle, sub, area_type, ...) {
     tmap_save(p, paste0("figures/scenarios/", testid, plottitle, "_scenario_", i, "_area_threshold_", area_type, ".png"), height=1920, width=1080)
   }  
 } }
+
+plotfun(nscenarios=1:10, plottitle="Known", sub=c("nsw", "seq"), area_type="habitat", breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k"), palette=greypal, showNA=FALSE)
+plotfun(nscenarios=1:8, plottitle="Lost", sub="wholerange", area_type="habitat", breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k"), palette=greypal, showNA=FALSE)
+plotfun(nscenarios=1:8, plottitle="Lost3", sub="wholerange", area_type="habitat", breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k"), palette=greypal, showNA=FALSE)
+
+
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="pu", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known2", sub=c("wholerange", "nsw", "seq"), area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=c(5, 9, 10), plottitle="Known2", sub=c("wholerange", "nsw", "seq"), area_type="pu", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Lost3", sub="wholerange", area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
 
 plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="habitat", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
 plotfun(nscenarios=c(5, 9, 10), plottitle="Known", sub=c("wholerange", "nsw", "seq"), area_type="pu", palette=greypal, breaks=c(0, 1000, 10000, 100000, 100000000), labels=c("<1k", "1k-10k","10k-100k", ">100k"), showNA=FALSE)
