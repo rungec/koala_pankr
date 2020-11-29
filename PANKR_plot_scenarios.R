@@ -74,6 +74,7 @@ plotfun(nscenarios=1:4, plottitle="Habitat", sub="wholerange", labels=c("Vulnera
 plotfun(nscenarios=1:6, plottitle="Monitoring", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:6, plottitle="Recovery", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:6, plottitle="Recovery2", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=1:6, plottitle="Current", sub="wholerange", labels=c("Climate suitable"), showNA=FALSE)
 
 plotfun(nscenarios=1:10, plottitle="Known2", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:10, plottitle="Known3", sub=c("nsw", "seq", "wholerange"), labels=c("Meets criteria"), showNA=FALSE)
