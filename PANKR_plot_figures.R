@@ -38,21 +38,21 @@ p <- tm_shape(region) +
   tm_shape(df) +
   tm_fill(col='area_col', title="Area (ha)", legend.position=c("top", "right"), colorNA="grey90", palette=greypal, 
           breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k")) +
-  tm_shape(region) + tm_borders() +
+ # tm_shape(region) + tm_borders() +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 p2 <- tm_shape(region, bbox=seq_region) + 
   tm_fill(palette="grey90") +
   tm_shape(df) +
   tm_fill(col='area_col', title="Area (ha)", legend.position=c("top", "right"), colorNA="grey90", palette=greypal, 
           breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k")) +
-  tm_shape(region) + tm_borders() +
+  #tm_shape(region) + tm_borders() +
   tm_layout(legend.show=FALSE, frame=TRUE, title="(b)", title.position = c("LEFT", "TOP"))
 p3 <- tm_shape(region, bbox=nsw_region) + 
   tm_fill(palette="grey90") +
   tm_shape(df) +
   tm_fill(col='area_col', title="Area (ha)", legend.position=c("top", "right"), colorNA="grey90", palette=greypal, 
           breaks=c(0, 1000, 10000, 10000000), labels=c("<1k", "1k-10k",">10k")) +
-  tm_shape(region) + tm_borders() +
+  #tm_shape(region) + tm_borders() +
   tm_layout(legend.show=FALSE, frame=TRUE, title="(c)", title.position = c("LEFT", "TOP"))
 
 
@@ -63,15 +63,63 @@ tmap_save(p, paste0(oupdir, "Fig_A_Known_a.eps"), height=1920, width=1080)
 tmap_save(p2, paste0(oupdir, "Fig_A_Known_b.eps"), height=1072, width=1056)
 tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.eps"), height=1072, width=716)
 
+
 ######################
-#Figure C: Current koalas and habitat likely to be lost to climate change
+#Figure B: Climate suitable habitat
 ######################
-kdf <- loadRData(paste0(inpdir, "data/","Lost3_scenario_5_clusterthresh_habitat_0ha.Rdata"))
-hdf <- loadRData(paste0(inpdir, "data/","Habitat_lost_scenario_xxx_clusterthresh_habitat_0ha.Rdata"))
+
+
+
+
+######################
+#Figure C: Current koalas overlaid on habitat likely to be lost to climate change
+######################
+###Mid range, majority of models
+kdf <- loadRData(paste0(inpdir, "data/","Lost3_scenario_3_clusterthresh_habitat_0ha.Rdata"))
+hdf <- loadRData(paste0(inpdir, "data/","Habitat_scenario_1_clusterthresh_habitat_0ha.Rdata"))
 #check scenario
 #st_write(kdf, paste0(shpdir,"Lost3_scenario_5_clusterthresh_habitat_0ha.shp"))
-#
+#st_write(hdf, paste0(shpdir,"Habitat_scenario_1_clusterthresh_habitat_0ha.shp"))
 greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")[2:5]
 
+kdf <- kdf %>% mutate(plotid = 1)
+hdf <- hdf %>% mutate(plotid = 1)
 
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(hdf) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[4]) +
+  tm_shape(kdf) +
+  tm_fill(col='plotid', legend.show=FALSE, colorNA="grey90", palette="mediumorchid2") +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("Habitat", "Koalas"), title="At risk", col=c(greypal[4], "mediumorchid2"), border.col="white") +
+  tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
+tmap_save(p, paste0(oupdir, "Fig_Ca_Lost_mid.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_Ca_Lost_mid.eps"), height=1920, width=1080)
+
+###Core range, all models
+kdf <- loadRData(paste0(inpdir, "data/","Lost3_scenario_2_clusterthresh_habitat_0ha.Rdata"))
+hdf <- loadRData(paste0(inpdir, "data/","Habitat_scenario_4_clusterthresh_habitat_0ha.Rdata"))
+#check scenario
+#st_write(kdf, paste0(shpdir,"Lost3_scenario_5_clusterthresh_habitat_0ha.shp"))
+#st_write(hdf, paste0(shpdir,"Habitat_scenario_1_clusterthresh_habitat_0ha.shp"))
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")[2:5]
+
+kdf <- kdf %>% mutate(plotid = 1)
+hdf <- hdf %>% mutate(plotid = 1)
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(hdf) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[4]) +
+  tm_shape(kdf) +
+  tm_fill(col='plotid', legend.show=FALSE, colorNA="grey90", palette="mediumorchid2") +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("Habitat", "Koalas"), title="At risk", col=c(greypal[4], "mediumorchid2"), border.col="white") +
+  tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
+
+tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.eps"), height=1920, width=1080)
