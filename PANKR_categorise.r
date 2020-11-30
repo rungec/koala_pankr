@@ -78,9 +78,9 @@ save(lost_pankr, file=paste0(oupdir, "koala_lost_pankr_raw_", cell_area, ".Rdata
 
 #areas where monitoring is needed to determine if koala (still) occur
 monitoring_pankr <- k_fix %>% 
-  mutate(scenario_1 = case_when(habitat_area_total > 30 & current_koala == 0 ~ 1, TRUE ~ 0), #no sightings within 1km
-         scenario_2 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("10-50km", "50-100km", ">100km") ~ 1, TRUE ~ 0), #no sightings within 10km
-         scenario_3 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("50-100km", ">100km") ~ 1, TRUE ~ 0), #no sightings within 50km
+  mutate(scenario_1 = case_when(habitat_area_total > 30 & dist2currkoala == "< 10 km" ~ 1, TRUE ~ 0), #habitat within 10km of sightings
+         scenario_2 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("< 10 km", "10-50km") ~ 1, TRUE ~ 0), #habitat within 50km of sightings
+         scenario_3 = case_when(habitat_area_total > 30 & dist2currkoala %in% c("< 10 km", "10-50km", "50-100km") ~ 1, TRUE ~ 0), #habitat within 100km of sightings
          scenario_4 = case_when(habitat_area_total > 30 & historic_koala > 0 & current_koala == 0 ~ 1, TRUE ~ 0), #historical koala but not current koala in cell
          scenario_5 = case_when(habitat_area_total > 30 & dist2histkoala =="< 10 km" & dist2currkoala %in% c("10-50km", "50-100km", ">100km") ~ 1, TRUE ~ 0), #historical koala but not current koala within 10km
          scenario_6 = case_when(habitat_area_total > 30 & dist2histkoala %in% c("< 10 km", "10-50km") & dist2currkoala %in% c("50-100km", ">100km") ~ 1, TRUE ~ 0)) %>% #historical koala but not current koala within 50km
