@@ -69,6 +69,9 @@ tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.eps"), height=1072, width=716)
 ######################
 
 
+p12 <- tmap_arrange(p, p2, ncol=2, widths=c(0.5, 0.5))
+
+
 
 
 ######################
@@ -123,3 +126,67 @@ p <- tm_shape(region) +
 
 tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.eps"), height=1920, width=1080)
+
+#############################
+#Figure D: Monitoring areas: habitat >10km and >50km from recent sightings
+#############################
+curr_hab <- loadRData(paste0(inpdir, "data/","Current_scenario_5_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+curr_k_1km <- loadRData(paste0(inpdir, "data/","Known_scenario_1_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
+curr_k_10km <- loadRData(paste0(inpdir, "data/","Monitoring_scenario_1_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+curr_k_50km <- loadRData(paste0(inpdir, "data/","Monitoring_scenario_2_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(curr_hab) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  tm_shape(curr_k_50km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[4]) +
+  tm_shape(curr_k_10km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
+  tm_shape(curr_k_1km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[2]) +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("unsurveyed","<50km", "<10km", "<1km"), title="Surveys", col=c(greypal[5], greypal[4], greypal[3], greypal[2]), border.col="grey90") +
+  tm_layout(frame=FALSE)
+
+
+tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.eps"), height=1920, width=1080)
+
+
+#############################
+#Figure E: Potentially extinct populations
+#############################
+hist_k_10km <- loadRData(paste0(inpdir, "data/","Monitoring_scenario_5_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+hist_k_50km <- loadRData(paste0(inpdir, "data/","Monitoring_scenario_6_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+hist_k_1km <- loadRData(paste0(inpdir, "data/","Monitoring_scenario_4_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+curr_hab <- loadRData(paste0(inpdir, "data/","Current_scenario_5_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(curr_hab) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  tm_shape(hist_k_50km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette="mediumorchid3") +
+  tm_shape(hist_k_10km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette="mediumorchid1") +
+  tm_shape(hist_k_1km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette="mediumorchid1") +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("habitat", "<50km", "<10km"), title="Historical", col=c(greypal[5], "mediumorchid3", "mediumorchid1"), border.col="grey90") +
+  tm_layout(frame=FALSE)
+
+tmap_save(p, paste0(oupdir, "Fig_E_extinctkoala.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_E_extnctkoala.eps"), height=1920, width=1080)
+
+
+
+
+
+
