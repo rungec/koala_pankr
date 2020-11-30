@@ -160,12 +160,12 @@ p <- tm_shape(region) +
   tm_shape(curr_k_50km) +
   tm_fill(col='plotid', legend.show=FALSE, palette=greypal[4]) +
   tm_shape(curr_k_10km) +
-  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
-  tm_shape(curr_k_1km) +
   tm_fill(col='plotid', legend.show=FALSE, palette=greypal[2]) +
+  tm_shape(curr_k_1km) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[1]) +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
-  tm_add_legend(type=c("fill"), labels=c("unsurveyed","<50km", "<10km", "<1km"), title="Surveys", col=c(greypal[5], greypal[4], greypal[3], greypal[2]), border.col="grey90") +
+  tm_add_legend(type=c("fill"), labels=c("unsurveyed","<50km", "<10km", "<1km"), title="Distance to record", col=c(greypal[5], greypal[4], greypal[2], greypal[1]), border.col="grey90") +
   tm_layout(frame=FALSE)
 
 
@@ -186,7 +186,7 @@ greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
 p <- tm_shape(region) + 
   tm_fill(palette="grey90") +
   tm_shape(curr_hab) +
-  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  tm_fill(col='plotid', title="Habitat", labels=c("Current"), legend.position=c("top", "right"), palette=greypal[5]) +
   tm_shape(hist_k_50km) +
   tm_fill(col='plotid', legend.show=FALSE, palette="mediumorchid3") +
   tm_shape(hist_k_10km) +
@@ -195,7 +195,7 @@ p <- tm_shape(region) +
   tm_fill(col='plotid', legend.show=FALSE, palette="mediumorchid1") +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
-  tm_add_legend(type=c("fill"), labels=c("habitat", "<50km", "<10km"), title="Historical", col=c(greypal[5], "mediumorchid3", "mediumorchid1"), border.col="grey90") +
+  tm_add_legend(type=c("fill"), labels=c("<50km", "<10km"), title="Historical records", col=c( "mediumorchid3", "mediumorchid1"), border.col="grey90") +
   tm_layout(frame=FALSE)
 
 tmap_save(p, paste0(oupdir, "Fig_E_extinctkoala.png"), height=1920, width=1080)
