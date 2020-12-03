@@ -68,6 +68,7 @@ plotfun <- function(nscenarios, plottitle, sub, ...) {
 plotfun(nscenarios=1:12, plottitle="Climate", sub="wholerange", labels=c("Climate suitable"), showNA=FALSE)
 plotfun(nscenarios=1:10, plottitle="Known", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:10, plottitle="Known3", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
+plotfun(nscenarios=11, plottitle="Known3e", sub="wholerange", labels=c("Meets criteria"), showNA=FALSE)
 plotfun(nscenarios=1:8, plottitle="Lost", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
 plotfun(nscenarios=1:8, plottitle="Lost3", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)
 plotfun(nscenarios=1:4, plottitle="Habitat", sub="wholerange", labels=c("Vulnerable"), showNA=FALSE)

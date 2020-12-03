@@ -65,32 +65,6 @@ tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.eps"), height=1072, width=716)
 
 
 ######################
-#Figure B: Climate suitable habitat (50% coverage)
-######################
-curr_mid <- loadRData(paste0(inpdir, "data/","Current_scenario_2_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
-core_all <- loadRData(paste0(inpdir, "data/","Climate_scenario_1_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
-mid_maj <- loadRData(paste0(inpdir, "data/","Climate_scenario_8_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
-
-greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
-
-#Plot habitat under climate change
-p <- tm_shape(region) + 
-  tm_fill(palette="grey90") +
-  tm_shape(curr_mid) +
-  tm_fill(col='plotid', legend.show=FALSE, palette="grey70") +
-  tm_shape(mid_maj) +
-  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
-  tm_shape(core_all) +
-  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
-  #tm_shape(region) + #tm_borders() +
-  tm_layout(frame=FALSE) +
-  tm_add_legend(type=c("fill"), labels=c("Current","Mid 50%", "Core 100%"), title="Models", col=c("grey50", greypal[5], greypal[3]), border.col="grey90") +
-  tm_layout(frame=FALSE)
-
-tmap_save(p, paste0(oupdir, "Fig_B_Climate.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_B_Climate.eps"), height=1920, width=1080)
-
-######################
 #Figure C: Current koalas overlaid on habitat likely to be lost to climate change
 ######################
 ###Mid range, majority of models
@@ -202,13 +176,13 @@ tmap_save(p, paste0(oupdir, "Fig_E_extinctkoala.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_E_extnctkoala.eps"), height=1920, width=1080)
 
 #############################
-#Figure F: NIKA under different coverage thresholds
+#Figure F: NIKA under different coverage and habitat thresholds
 #############################
 
 h10 <- loadRData(paste0(inpdir, "data/","Known3_scenario_9_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
 h30 <- loadRData(paste0(inpdir, "data/","Known3_scenario_10_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
 h50 <- loadRData(paste0(inpdir, "data/","Known3_scenario_5_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
-
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
 
 #Plot habitat of different coverage thresholds
 p <- tm_shape(region) + 
@@ -222,16 +196,65 @@ p <- tm_shape(region) +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
   tm_add_legend(type=c("fill"), labels=c("50%","30%", "10%"), title="Coverage", col=c(greypal[5], greypal[3], greypal[2]), border.col="grey90") +
-  tm_layout(frame=FALSE)
+  tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_F_coverage.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_F_coverage.eps"), height=1920, width=1080)
+
+
+#Plot NIKA under likely and possible habitat thresholds
+
+lik <- loadRData(paste0(inpdir, "data/","Known3_scenario_5_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
+pos <- loadRData(paste0(inpdir, "data/","Known3_scenario_7_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(pos) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
+  tm_shape(lik) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("likely","possible"), title="Habitat", col=c(greypal[5], greypal[3]), border.col="grey90") +
+  tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
+
+tmap_save(p, paste0(oupdir, "Fig_F_quality.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_F_quality.eps"), height=1920, width=1080)
+
+
+######################
+#Figure B: Climate suitable habitat (50% coverage)
+######################
+curr_mid <- loadRData(paste0(inpdir, "data/","Current_scenario_2_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
+core_all <- loadRData(paste0(inpdir, "data/","Climate_scenario_1_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
+mid_maj <- loadRData(paste0(inpdir, "data/","Climate_scenario_8_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid=1)
+
+greypal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+#Plot habitat under climate change
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(curr_mid) +
+  tm_fill(col='plotid', legend.show=FALSE, palette="grey70") +
+  tm_shape(mid_maj) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  tm_shape(core_all) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
+  #tm_shape(region) + #tm_borders() +
+  tm_layout(frame=FALSE) +
+  tm_add_legend(type=c("fill"), labels=c("Current","Mid 50%", "Core 100%"), title="Models", col=c("grey50", greypal[5], greypal[3]), border.col="grey90") +
+  tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
+
+tmap_save(p, paste0(oupdir, "Fig_B_Climate.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_B_Climate.eps"), height=1920, width=1080)
+
 
 #############################
 #Figure G: NIKA under different climate thresholds
 #############################
 
-core_nika <- loadRData(paste0(inpdir, "data/","Known3_scenario_6_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
+core_nika <- loadRData(paste0(inpdir, "data/","Known3e_scenario_11_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
 nika <- loadRData(paste0(inpdir, "data/","Known3_scenario_5_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
 
 
@@ -244,10 +267,8 @@ p <- tm_shape(region) +
   tm_fill(col='plotid', legend.show=FALSE, palette=greypal[3]) +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
-  tm_add_legend(type=c("fill"), labels=c("50%","100%"), title="Models", col=c(greypal[5], greypal[3]), border.col="grey90") +
-  tm_layout(frame=FALSE)
+  tm_add_legend(type=c("fill"), labels=c("Mid 50%","Core 100%"), title="Models", col=c(greypal[5], greypal[3]), border.col="grey90") +
+  tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.eps"), height=1920, width=1080)
-
-

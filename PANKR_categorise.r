@@ -43,7 +43,7 @@ known_pankr <- known_pankr %>%
          scenario_10_ha = case_when(scenario_8==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known_pankr, file=paste0(oupdir, "koala_known_pankr_raw_", cell_area, ".Rdata")) 
-                 
+
 recovery_pankr <- k_fix %>% 
   mutate(scenario_1 = case_when(current_koala == 0 & habitat_area_total > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
          scenario_2 = case_when(current_koala == 0 & habitat_area_total_s2 > 0 & recoverable_area_ha > 0 ~ 1, TRUE ~ 0),
@@ -173,6 +173,14 @@ known3_pankr <- known3_pankr %>%
          scenario_10_ha = case_when(scenario_10==1 ~ habitat_area_total, TRUE ~ 0)) %>%
   dplyr::select(starts_with('scenario'))
 save(known3_pankr, file=paste0(oupdir, "koala_known3_pankr_raw_", cell_area, ".Rdata")) 
+
+#extra scenario I forgot to include
+known3e_pankr <- k_fix %>% 
+  mutate(scenario_11 = case_when(dist2currkoala %in% c("< 10 km") & habitat_area_total > 50 & climate_2070_perc90ofrecords == 12 ~ 1, TRUE ~ 0))
+known3e_pankr <- known3e_pankr %>% 
+  mutate(scenario_11_ha = case_when(scenario_11==1 ~ habitat_area_total, TRUE ~ 0)) %>% 
+  dplyr::select(starts_with('scenario'))
+save(known3e_pankr, file=paste0(oupdir, "koala_known3e_pankr_raw_", cell_area, ".Rdata")) 
 
 #areas where there area known koala populations soon to be lost to climate change
 lost3_pankr <- k_fix %>% 

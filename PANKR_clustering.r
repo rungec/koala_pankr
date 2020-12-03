@@ -152,6 +152,7 @@ write.csv(d_all_spread, paste0(oupdir, testid, "Cluster_threshold_sensitivity_pu
 #d1a <- clusterFun('known_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d1b <- clusterFun('known2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d1c <- clusterFun('known3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
+d1c <- clusterFun('known3e_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 #d3a <- clusterFun('lost_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3b <- clusterFun('lost2_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
 d3c <- clusterFun('lost3_pankr',  min_area_list = list(0, 1000, 10000, 100000), area_type = "habitat", oupdir = oupdir)
