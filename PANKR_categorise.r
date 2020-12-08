@@ -249,6 +249,14 @@ current_suitable<- k_fix %>%
  dplyr::select(starts_with('scenario'))
 save(current_suitable, file=paste0(oupdir, "koala_current_suitable_raw_", cell_area, ".Rdata"))
 
+#extra scenarios for habitat mapping
+currente_suitable<- k_fix %>%
+ mutate(scenario_7 = case_when(habitat_area_total > 50 ~ 1, TRUE ~ 0),
+        scenario_8 = case_when(habitat_area_total_s2 > 30 ~ 1, TRUE ~ 0)) %>%
+ dplyr::select(starts_with('scenario'))
+save(currente_suitable, file=paste0(oupdir, "koala_currente_suitable_raw_", cell_area, ".Rdata"))
+
+
 habitat_lost <- k_fix %>%
   mutate(scenario_1 = case_when(climate_2070_perc95ofrecords < 4 & habitat_area_total > 50 ~ 1, TRUE ~ 0),
           scenario_2 = case_when(climate_2070_perc95ofrecords < 6 & habitat_area_total > 50 ~ 1, TRUE ~ 0),

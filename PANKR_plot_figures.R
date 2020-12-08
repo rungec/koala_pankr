@@ -65,7 +65,7 @@ tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.eps"), height=1072, width=716)
 
 
 ######################
-#Figure C: Current koalas overlaid on habitat likely to be lost to climate change
+#Figure C: At risk koalas overlaid on habitat likely to be lost to climate change
 ######################
 ###Mid range, majority of models
 kdf <- loadRData(paste0(inpdir, "data/","Lost3_scenario_3_clusterthresh_habitat_0ha.Rdata"))
@@ -140,7 +140,7 @@ p <- tm_shape(region) +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
   tm_add_legend(type=c("fill"), labels=c("unsurveyed","<50km", "<10km", "<1km"), title="Distance to record", col=c(greypal[5], greypal[4], greypal[2], greypal[1]), border.col="grey90") +
-  tm_layout(frame=FALSE)
+  tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
 
 
 tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.png"), height=1920, width=1080)
@@ -170,7 +170,7 @@ p <- tm_shape(region) +
   #tm_shape(region) + #tm_borders() +
   tm_layout(frame=FALSE) +
   tm_add_legend(type=c("fill"), labels=c("<50km", "<10km"), title="Historical records", col=c( "mediumorchid3", "mediumorchid1"), border.col="grey90") +
-  tm_layout(frame=FALSE)
+  tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_E_extinctkoala.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_E_extnctkoala.eps"), height=1920, width=1080)
@@ -272,3 +272,50 @@ p <- tm_shape(region) +
 
 tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.png"), height=1920, width=1080)
 tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.eps"), height=1920, width=1080)
+
+######################
+#Figure H: NIKA overlaid on current habitat
+######################
+df <- loadRData(paste0(inpdir, "data/","Known3_scenario_5_clusterthresh_habitat_0ha.Rdata")) %>% mutate(plotid = 1)
+curr_hab <- loadRData(paste0(inpdir, "data/","Current_scenario_5_clusterthresh_pu_0ha.Rdata")) %>% mutate(plotid = 1)
+
+#st_write(df, paste0(shpdir,"Known3_scenario_5_clusterthresh_habitat_0ha.shp"))
+greypal <- c("grey70", RColorBrewer::brewer.pal(5, "YlGnBu")[2:5])
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(curr_hab) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[1]) +
+  tm_shape(df) +
+  tm_fill(col='plotid', legend.show=FALSE, palette=greypal[5]) +
+  # tm_shape(region) + tm_borders() +
+  tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
+
+tmap_save(p, paste0(oupdir, "Fig_H_Known_a.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_H_Known_a.eps"), height=1920, width=1080)
+
+
+######################
+#Figure I: Current likely and possible habitat
+######################
+#Load data
+load("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/Gridded_data/clean/koala_gridded_vars_100ha_tidy_v3.Rdata")
+
+likely_hab <- k_fix %>% mutate(likely = case_when(habitat_area_total > 50 ~ 1, TRUE ~ 0)) %>%
+                dplyr::select(likely) %>% filter(likely==1)
+possible_hab <- k_fix %>% mutate(possible = case_when(habitat_area_total_s2 > 30 ~ 1, TRUE ~ 0)) %>%
+                dplyr::select(possible) %>% filter(possible==1)
+
+p <- tm_shape(region) + 
+  tm_fill(palette="grey90") +
+  tm_shape(possible_hab) +
+  tm_fill(col='possible', legend.show=FALSE, palette=greypal[3], style='cat') +
+  tm_shape(likely_hab) +
+  tm_fill(col='likely', legend.show=FALSE, palette=greypal[5], style='cat') +
+  tm_add_legend(type=c("fill"), labels=c("Likely 50% cover","Possible 30% cover"), title="Habitat", col=c(greypal[5], greypal[3]), border.col="grey90") +
+    # tm_shape(region) + tm_borders() +
+  tm_layout(frame=FALSE)
+
+tmap_save(p, paste0(oupdir, "Fig_I_Habitat.png"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_I_Habitat.eps"), height=1920, width=1080)
+
