@@ -143,6 +143,7 @@ d7 <- clusterFun('current_suitable', datatitle="Current", min_area_list = list(0
 d7 <- clusterFun('current_suitable', datatitle="Current", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
 d7b <- clusterFun('currente_suitable', datatitle="Current", min_area_list = list(0), area_type = "pu", oupdir = oupdir)
 d8a <- clusterFun('habitat_lost', datatitle="Lost", min_area_list = list(0, 1000, 10000), area_type = "pu", oupdir = oupdir)
+d9 <- clusterFun('climate_niche', datatitle="Niche", min_area_list = list(0), area_type = "pu", oupdir=oupdir)
 
 d_all_p <- rbind(d2a, d2b, d5, d6) 
 #d_all_p <- rbind(d1a, d1b, d1c, d2a, d2b, d3a, d3b, d3c, d4, d5, d6) 
