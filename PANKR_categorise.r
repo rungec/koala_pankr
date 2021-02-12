@@ -227,7 +227,11 @@ save(lost3_pankr, file=paste0(oupdir, "koala_lost3_pankr_raw_", cell_area, ".Rda
 climate_niche <- k_fix %>%
   mutate(scenario_1 = case_when(climate_2070_perc95ofrecords>6 ~ 1, TRUE ~ 0),
          scenario_2 = case_when(climate_2070_perc95ofrecords>5 ~ 1, TRUE ~ 0),
-        scenario_3 = case_when(climate_2070_perc99ofrecords==12 ~ 1, TRUE ~ 0)) %>%
+        scenario_3 = case_when(climate_2070_perc99ofrecords==12 ~ 1, TRUE ~ 0),
+        scenario_4 = case_when(climate_2070_perc95ofrecords==12 ~ 1, TRUE ~ 0),
+        scenario_5 = case_when(climate_2070_perc95ofrecords==11 ~ 1, TRUE ~ 0),
+        scenario_6 = case_when(climate_2070_perc95ofrecords>1 ~ 1, TRUE ~ 0),
+          scenario_7 = case_when(climate_2070_perc95ofrecords>0 ~ 1, TRUE ~ 0)) %>%
 dplyr::select(starts_with('scenario'))
 save(climate_niche, file=paste0(oupdir, "koala_climate_niche_raw_", cell_area, ".Rdata"))
 
