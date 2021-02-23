@@ -38,6 +38,11 @@ k_curr <- raster(list.files("data/asciis/", full.names = TRUE)[1])
 k_2030 <- raster(list.files("data/asciis/", full.names = TRUE)[2])
 k_2050 <- raster(list.files("data/asciis/", full.names = TRUE)[3])
 k_2070 <- raster(list.files("data/asciis/", full.names = TRUE)[4])
+# writeRaster(k_2070, "Hoskings_2070_koalarange.tif", datatype='INT4S')
+# writeRaster(k_2050, "Hoskings_2050_koalarange.tif", datatype='INT4S')
+# writeRaster(k_2030, "Hoskings_2030_koalarange.tif", datatype='INT4S')
+# writeRaster(k_curr, "Hoskings_current_koalarange.tif", datatype='INT4S')
+# rpol <- rasterToPolygons(k_2070, function(x){x>=0.407}, na.rm=TRUE, dissolve = TRUE)
 
 ###############
 #CALCULATE AREA OF LAND THAT WILL BE CLIMATE SUITABLE
@@ -216,5 +221,10 @@ habitatfun <- function(subsname, oupname){
   habitatfun("ibra", "bioregions_ibra7")
   habitatfun("krange", "listed_koala")
   
-  
+  a <- read_csv("Climate_hoskings_habitat_bioregions_hoskings.csv")
+  b <- a %>% group_by(STA_CODE, REG_Hoskin) %>% summarise(perc_loss_2030 = paste0(min(perc_loss_2030), " , ", max(perc_loss_2030)),
+                                                          perc_loss_2050 = paste0(min(perc_loss_2050), " , ", max(perc_loss_2050)),
+                                                          perc_loss_2070 = paste0(min(perc_loss_2070), " , ", max(perc_loss_2070)))
 
+  write_csv(b, paste0("Climate_hoskings_habitat_bioregions_hoskings_v2.csv"))
+  
