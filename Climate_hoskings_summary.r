@@ -222,9 +222,17 @@ habitatfun <- function(subsname, oupname){
   habitatfun("krange", "listed_koala")
   
   a <- read_csv("Climate_hoskings_habitat_bioregions_hoskings.csv")
-  b <- a %>% group_by(STA_CODE, REG_Hoskin) %>% summarise(perc_loss_2030 = paste0(min(perc_loss_2030), " , ", max(perc_loss_2030)),
-                                                          perc_loss_2050 = paste0(min(perc_loss_2050), " , ", max(perc_loss_2050)),
-                                                          perc_loss_2070 = paste0(min(perc_loss_2070), " , ", max(perc_loss_2070)))
+  b <- a %>% group_by(STA_CODE, REG_Hoskin) %>% summarise(perc_loss_2030 = paste0(min(perc_loss_2030), ", ", max(perc_loss_2030)),
+                                                          perc_loss_2050 = paste0(min(perc_loss_2050), ", ", max(perc_loss_2050)),
+                                                          perc_loss_2070 = paste0(min(perc_loss_2070), ", ", max(perc_loss_2070)))
 
   write_csv(b, paste0("Climate_hoskings_habitat_bioregions_hoskings_v2.csv"))
+
   
+  a <- read_csv("Climate_hoskings_habitat_bioregions_ibra7.csv")
+  b <- a %>% group_by(STA_CODE, REG_NAME_7) %>% summarise(perc_loss_2030 = paste0(min(perc_loss_2030), ", ", max(perc_loss_2030)),
+                                                          perc_loss_2050 = paste0(min(perc_loss_2050), ", ", max(perc_loss_2050)),
+                                                          perc_loss_2070 = paste0(min(perc_loss_2070), ", ", max(perc_loss_2070)))
+  
+  write_csv(b, paste0("Climate_hoskings_habitat_bioregions_ibra7_v2.csv"))  
+    
