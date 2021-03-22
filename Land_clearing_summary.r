@@ -22,13 +22,14 @@ ibra <- st_read("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Bioregions/IBRA
   st_transform(3577) %>% select("OBJECTID", "STA_CODE", "REG_NAME_7")
 
 #koala habitat and range map
-koalarangedir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Koala_Commonwealth/snes_public_grids_08Aug2019 _filegeodatabase/snes_public.gdb"
+krange_pol <- st_read("D:/Box Sync/DAWE/Land_use_change/Koala_SDM/Phascolarctos_cinereus_85104.shp") %>% 
+  st_transform(3577)
 koalahabdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/Habitat_harmonised/Datasets/Harmonised_koala_habitat_v1.gpkg"
 
 ###################
 #load koala polygons (value=1=likely, value=2=may occur)
-krange_pol <- st_read(koalarangedir, layer='koala') %>% st_transform(3577) %>% mutate(habitat_rank = case_when(pres_rank==2 ~ 1,
-                                                                                                               pres_rank==1 ~ 2)) %>% select(habitat_rank)
+krange_pol <- krange_pol %>% mutate(habitat_rank = case_when(KLM %in% c(26, 36) ~ 1,
+                                                                                                               KLM==46 ~ 2)) %>% select(habitat_rank)
 khab_pol <- st_read(koalahabdir) %>% mutate(habitat_rank = case_when(habitat_present_likely==1 ~ 1,
                                                                      habitat_present_possible==1 ~ 2)) #%>% select(habitat_rank)
 
@@ -60,18 +61,19 @@ k_rast2 <- fasterize(khab_pol, rtemp, field='habitat_rank')
 writeRaster(k_rast2, filename="temp/khab.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
 rm(k_rast2)
 
-k_rast1 <- raster("temp/krange.tif")
-k_rast2 <- raster("temp/khab.tif")
-k_rast <- stack(k_rast1, k_rast2*10)
+#k_rast1 <- raster("temp/krange.tif")
+#k_rast2 <- raster("temp/khab.tif")
+#k_rast <- stack(k_rast1, k_rast2*10)
 
 #combine koala layers
-koala_rast <- calc(k_rast, sum, na.rm=TRUE, filename="temp/koala_rast.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
-subsdf <- data.frame(from=c(1,10,12,11,21,2,20,22),to=c(1,1,1,1,1,2,2,2))
-koala_rast <- raster::subs(koala_rast, subsdf, by="from", which="to", filename="temp/koala_range_combined.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
-rm(k_rast)
-rm(k_rast1)
-rm(k_rast2)
-koala_rast <- raster("temp/koala_range_combined.tif")
+#koala_rast <- calc(k_rast, sum, na.rm=TRUE, filename="temp/koala_rast.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
+#subsdf <- data.frame(from=c(1,10,12,11,21,2,20,22),to=c(1,1,1,1,1,2,2,2))
+#koala_rast <- raster::subs(koala_rast, subsdf, by="from", which="to", filename="temp/koala_range_combined.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
+#rm(k_rast)
+#rm(k_rast1)
+#rm(k_rast2)
+#koala_rast <- raster("temp/koala_range_combined.tif")
+koala_rast <- raster("temp/krange.tif")
 crs(koala_rast) <- crs(ibra)
 #####################
 #Calculate the area of koala RANGE in each bioregion
