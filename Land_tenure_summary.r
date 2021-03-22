@@ -64,6 +64,14 @@ write.csv(muf, "temp/muf.csv")
 write.csv(ncr, "temp/ncr.csv")
 write.csv(ocl, "temp/ocl.csv")
 
+####################
+#make a layer intersecting crown land and koala habitat
+tenu_rast <- crop(tenu_rast, koala_rast, snap='out', filename="temp/tenure_cropped_khab.tif", format='GTiff', datatype='INT4S', overwrite=TRUE)
+crown_rast <- overlay(koala_rast, tenu_rast, fun=function(x, y){x*10000 + y}, na.rm=FALSE, filename="output/crownland_koalahabitat.tif", format="GTiff", datatype='INT4S', overwrite=TRUE)
+#first digit = koala habitat
+#next three digits = ibra OBJECTID
+
+
 #################################
 priv <- read_csv("temp/priv.csv")[2:3]
 lease <- read_csv("temp/lease.csv")[2:3]
