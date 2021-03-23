@@ -181,74 +181,94 @@ df <- df %>% mutate(cropping_ha = cropping*50*50/10000,
 write_csv(df, "output/Koala_Clearing_by_landuse_and_year.csv")
 
 ######################################
-#Summarise data for 2012-2017 clearing
+#Summarise data for Koala CA
 df <- read_csv("output/Koala_Clearing_by_landuse_and_year.csv")
-#summarise by bioregion
+
+bioreg_df <- read_csv("output/bioregion_habitat.csv")
+
 df_s1 <- df %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
-              filter(defor_yr %in% c("2012-2013", "2013-2014", "2014-2015", "2015-2016", "2016-2017")) %>% 
-              group_by(STA_CODE, REG_NAME_7, koala_habitat) %>%
-              summarise(grazing_ha = sum(grazing_ha),
-                        cropping_ha = sum(cropping_ha),
-                        urban_ha = sum(urban_ha),
-                        forestry_ha = sum(forestry_ha),
-                        energy_ha = sum(energy_ha)) %>% ungroup() %>%
-              mutate(total_ha_cleared = rowSums(across(grazing_ha:energy_ha))) %>%
-              left_join(bioreg_df[,c("STA_CODE", "REG_NAME_7", "likely_habitat_ha")], by=c("STA_CODE"="STA_CODE", "REG_NAME_7"="REG_NAME_7")) %>%
-              mutate(percofclearing_grazing = round(100*grazing_ha/total_ha_cleared, 2),
-                     percofclearing_cropping = round(100*cropping_ha/total_ha_cleared, 2),
-                     percofclearing_urban = round(100*urban_ha/total_ha_cleared, 2),
-                     percofclearing_forestry = round(100*forestry_ha/total_ha_cleared, 2),
-                     percofclearing_energy = round(100*energy_ha/total_ha_cleared, 2)) %>%
-              mutate(percofhabitat_grazing = round(100*grazing_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                     percofhabitat_cropping = round(100*cropping_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                     percofhabitat_urban = round(100*urban_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                     percofhabitat_forestry = round(100*forestry_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                     percofhabitat_energy = round(100*energy_ha/(likely_habitat_ha + total_ha_cleared), 4))
-  write_csv(df_s1, "Koala_clearing_stats_by_bioregion_2012to2017.csv")     
+  group_by(STA_CODE, REG_NAME_7, koala_habitat, defor_yr) %>%
+  summarise(grazing_ha = sum(grazing_ha),
+            cropping_ha = sum(cropping_ha),
+            urban_ha = sum(urban_ha),
+            forestry_ha = sum(forestry_ha),
+            energy_ha = sum(energy_ha)) %>% ungroup() %>%
+  mutate(total_ha_cleared = rowSums(across(grazing_ha:energy_ha))) %>%
+  left_join(bioreg_df[,c("STA_CODE", "REG_NAME_7", "likely_range_ha", "likely_habitat_ha")], by=c("STA_CODE"="STA_CODE", "REG_NAME_7"="REG_NAME_7")) %>%
+  select(!grazing_ha:energy_ha) 
 
-#summarise by state
-df_s2 <- df_s1 %>% group_by(STA_CODE, koala_habitat) %>%
-              summarise(grazing_ha = sum(grazing_ha),
-                        cropping_ha = sum(cropping_ha),
-                        urban_ha = sum(urban_ha),
-                        forestry_ha = sum(forestry_ha),
-                        energy_ha = sum(energy_ha),
-                        total_ha_cleared = sum(total_ha_cleared),
-                        likely_habitat_ha = sum(likely_habitat_ha)) %>% ungroup() %>%
-          mutate(percofclearing_grazing = round(100*grazing_ha/total_ha_cleared, 2),
-                 percofclearing_cropping = round(100*cropping_ha/total_ha_cleared, 2),
-                 percofclearing_urban = round(100*urban_ha/total_ha_cleared, 2),
-                 percofclearing_forestry = round(100*forestry_ha/total_ha_cleared, 2),
-                 percofclearing_energy = round(100*energy_ha/total_ha_cleared, 2)) %>%
-            mutate(percofhabitat_grazing = round(100*grazing_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                   percofhabitat_cropping = round(100*cropping_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                   percofhabitat_urban = round(100*urban_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                   percofhabitat_forestry = round(100*forestry_ha/(likely_habitat_ha + total_ha_cleared), 4),
-                   percofhabitat_energy = round(100*energy_ha/(likely_habitat_ha + total_ha_cleared), 4))
-write_csv(df_s2, "Koala_clearing_stats_by_state_2012to2017.csv")     
+df_s2 <- df_s1 %>% pivot_wider(names_from = defor_yr, values_from = total_ha_cleared, names_prefix = "area_cleared_ha_")
+write_csv(df_s2, "output/Koala_clearing_by_year_and_bioregion.csv")
+
+df_s3 <- df_s2 %>% mutate(area_cleared_ha_2000_2012 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2011-2012`)),
+                          area_cleared_ha_2012_2017 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)),
+                          area_cleared_ha_2000_2017 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2016-2017`)),
+                          area_cleared_ha_2012_2021 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)) + `area_cleared_ha_2016-2017`*4,
+                          area_cleared_ha_2017_2021 = `area_cleared_ha_2016-2017`*(2021-2017),
+                          area_cleared_ha_2021_2042 = `area_cleared_ha_2016-2017`*(2042-2021)) %>%
+                    mutate(perc_cleared_ha_2000_2012 = round(100*area_cleared_ha_2000_2012/{likely_habitat_ha + area_cleared_ha_2000_2017}, 4),
+                           perc_cleared_ha_2012_2021 = round(100*area_cleared_ha_2012_2021/{likely_habitat_ha + area_cleared_ha_2012_2017}, 4),
+                           perc_cleared_ha_2021_2042 = round(100*area_cleared_ha_2021_2042/{likely_habitat_ha - area_cleared_ha_2017_2021}, 4))
+
+write_csv(df_s3, "output/Koala_clearing_by_year_and_bioregion_percent.csv")  
+  
+state_df <- df_s2 %>% group_by(STA_CODE) %>%
+              summarise(likely_range_ha = sum(likely_range_ha, na.rm=TRUE),
+                        likely_habitat_ha = sum(likely_habitat_ha, na.rm=TRUE)) %>%
+            mutate(REG_NAME_7 = "WHOLE STATE")
+listed_df <- df_s2 %>% group_by(koala_habitat) %>%
+              summarise(likely_range_ha = sum(likely_range_ha, na.rm=TRUE),
+                        likely_habitat_ha = sum(likely_habitat_ha, na.rm=TRUE)) %>%
+              mutate(STA_CODE="WHOLE LISTED RANGE", REG_NAME_7 = "WHOLE LISTED RANGE", koala_habitat="likely")
 
 
-#summarise by listed koala
-df_s3 <- df_s1 %>% group_by(koala_habitat) %>%
-              summarise(grazing_ha = sum(grazing_ha),
-                        cropping_ha = sum(cropping_ha),
-                        urban_ha = sum(urban_ha),
-                        forestry_ha = sum(forestry_ha),
-                        energy_ha = sum(energy_ha),
-                        total_ha_cleared = sum(total_ha_cleared),
-                        likely_habitat_ha = sum(likely_habitat_ha)) %>% ungroup() %>%
-  mutate(percofclearing_grazing = round(100*grazing_ha/total_ha_cleared, 2),
-         percofclearing_cropping = round(100*cropping_ha/total_ha_cleared, 2),
-         percofclearing_urban = round(100*urban_ha/total_ha_cleared, 2),
-         percofclearing_forestry = round(100*forestry_ha/total_ha_cleared, 2),
-         percofclearing_energy = round(100*energy_ha/total_ha_cleared, 2)) %>%
-  mutate(percofhabitat_grazing = round(100*grazing_ha/(likely_habitat_ha + total_ha_cleared), 4),
-         percofhabitat_cropping = round(100*cropping_ha/(likely_habitat_ha + total_ha_cleared), 4),
-         percofhabitat_urban = round(100*urban_ha/(likely_habitat_ha + total_ha_cleared), 4),
-         percofhabitat_forestry = round(100*forestry_ha/(likely_habitat_ha + total_ha_cleared), 4),
-         percofhabitat_energy = round(100*energy_ha/(likely_habitat_ha + total_ha_cleared), 4))
+df_s4 <-  df %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
+      group_by(STA_CODE, koala_habitat, defor_yr) %>%
+      summarise(grazing_ha = sum(grazing_ha),
+            cropping_ha = sum(cropping_ha),
+            urban_ha = sum(urban_ha),
+            forestry_ha = sum(forestry_ha),
+            energy_ha = sum(energy_ha)) %>% ungroup() %>%
+      mutate(total_ha_cleared = rowSums(across(grazing_ha:energy_ha))) %>%
+      select(!grazing_ha:energy_ha) %>%
+      left_join(state_df[,c("STA_CODE", "REG_NAME_7", "likely_range_ha", "likely_habitat_ha")], by=c("STA_CODE"="STA_CODE")) %>%
+      pivot_wider(names_from = defor_yr, values_from = total_ha_cleared, names_prefix = "area_cleared_ha_") %>%
+      mutate(area_cleared_ha_2000_2012 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2011-2012`)),
+           area_cleared_ha_2012_2017 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)),
+           area_cleared_ha_2000_2017 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2016-2017`)),
+           area_cleared_ha_2012_2021 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)) + `area_cleared_ha_2016-2017`*4,
+           area_cleared_ha_2017_2021 = `area_cleared_ha_2016-2017`*(2021-2017),
+           area_cleared_ha_2021_2042 = `area_cleared_ha_2016-2017`*(2042-2021)) %>% 
+      mutate(perc_cleared_ha_2000_2012 = round(100*area_cleared_ha_2000_2012/{likely_habitat_ha + area_cleared_ha_2000_2017}, 4),
+             perc_cleared_ha_2012_2021 = round(100*area_cleared_ha_2012_2021/{likely_habitat_ha + area_cleared_ha_2012_2017}, 4),
+             perc_cleared_ha_2021_2042 = round(100*area_cleared_ha_2021_2042/{likely_habitat_ha - area_cleared_ha_2017_2021}, 4))
 
-write_csv(df_s3, "Koala_clearing_stats_listedKoala_2012to2017.csv")     
+write_csv(df_s4, "output/Koala_clearing_by_year_and_state.csv")
+
+df_s5 <- df %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
+  group_by(koala_habitat, defor_yr) %>%
+  summarise(grazing_ha = sum(grazing_ha),
+            cropping_ha = sum(cropping_ha),
+            urban_ha = sum(urban_ha),
+            forestry_ha = sum(forestry_ha),
+            energy_ha = sum(energy_ha)) %>% ungroup() %>%
+  mutate(total_ha_cleared = rowSums(across(grazing_ha:energy_ha))) %>%
+  select(!grazing_ha:energy_ha) %>%
+  pivot_wider(names_from = defor_yr, values_from = total_ha_cleared, names_prefix = "area_cleared_ha_") %>%
+  left_join(listed_df[,c("STA_CODE", "REG_NAME_7", "koala_habitat", "likely_range_ha", "likely_habitat_ha")], by=c("koala_habitat"="koala_habitat")) %>%
+  mutate(area_cleared_ha_2000_2012 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2011-2012`)),
+       area_cleared_ha_2012_2017 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)),
+       area_cleared_ha_2000_2017 = rowSums(across(`area_cleared_ha_2000-2002`:`area_cleared_ha_2016-2017`)),
+       area_cleared_ha_2012_2021 = rowSums(across(`area_cleared_ha_2012-2013`:`area_cleared_ha_2016-2017`)) + `area_cleared_ha_2016-2017`*4,
+       area_cleared_ha_2017_2021 = `area_cleared_ha_2016-2017`*(2021-2017),
+       area_cleared_ha_2021_2042 = `area_cleared_ha_2016-2017`*(2042-2021)) %>%
+  mutate(perc_cleared_ha_2000_2012 = round(100*area_cleared_ha_2000_2012/{likely_habitat_ha + area_cleared_ha_2000_2017}, 4),
+         perc_cleared_ha_2012_2021 = round(100*area_cleared_ha_2012_2021/{likely_habitat_ha + area_cleared_ha_2012_2017}, 4),
+         perc_cleared_ha_2021_2042 = round(100*area_cleared_ha_2021_2042/{likely_habitat_ha - area_cleared_ha_2017_2021}, 4))
+
+write_csv(df_s5, "output/Koala_clearing_by_year_listedkoala.csv")
+
+  
 
 ######################################
 #Summarise data
