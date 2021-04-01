@@ -46,7 +46,7 @@ thresholds_hosk <- c(0.407, 0.354, 0.291)
 k_curr <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[1])
 #k_2030 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[2])
 #k_2050 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[3])
-#k_2070 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[4])
+k_2070 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[4])
 k_2021 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2021_koalarange_interpolated.tif")
 k_2042 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2042_koalarange_interpolated.tif")
 # writeRaster(k_2070, "Hoskings_2070_koalarange.tif", datatype='INT4S')
@@ -109,10 +109,10 @@ sumfun <- function(shp, oupname, thresholds) {
  #d3 <- thresholdfun(k_2030, shp, scenario="yr2030", thresholds=thresholds, climmod = "Hosking") 
  d4 <- thresholdfun(k_2042, shp, scenario="yr2042", thresholds=thresholds, climmod = "Hosking") 
  #d5 <- thresholdfun(k_2050, shp, scenario="yr2050", thresholds=thresholds, climmod = "Hosking") 
-# d6 <- thresholdfun(k_2070, shp, scenario="yr2070", thresholds=thresholds, climmod = "Hosking") 
+ d6 <- thresholdfun(k_2070, shp, scenario="yr2070", thresholds=thresholds, climmod = "Hosking") 
   
   #all_df <- rbind(d1,d2,d3,d4, d5, d6)
-  all_df <- rbind(d1,d2,d4)
+  all_df <- rbind(d1,d2,d4, d6)
   
   all_wide <- all_df %>% pivot_wider(names_from = scenario, names_prefix = "area_ha_", values_from = area_ha)
   
@@ -144,7 +144,7 @@ briscoe_fun <- function(inpdir, shp, scenario, oupname, tool){
       currthreshold <- thresholds_b[thresholds_b$Scenario=="extremesA", "perc95ofrecords"]
     } else if (grepl("_ExtB_|extremesB", currmod)==TRUE){
       currthreshold <- thresholds_b[thresholds_b$Scenario=="extremesB", "perc95ofrecords"]
-    } else if (grepl("_high_", currmod)==TRUE){
+    } else if (grepl("_high", currmod)==TRUE){
       currthreshold <- thresholds_b[thresholds_b$Scenario=="poor_high", "perc95ofrecords"]
     } else if (grepl("_med", currmod)==TRUE){
       currthreshold <- thresholds_b[thresholds_b$Scenario=="poor_med", "perc95ofrecords"]
@@ -161,20 +161,44 @@ briscoe_fun <- function(inpdir, shp, scenario, oupname, tool){
   return(all_df)
   }
 
+#DATA FOR CA SUMMARIES
 d1 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/Current", ibra_hosk, "current_maxent", "current_maxent", tool="Maxent")
 d2 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2021", ibra_hosk, "2021_maxent", "2021_maxent", tool="Maxent")
 d3 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2042", ibra_hosk, "2042_maxent", "2042_maxent", tool="Maxent")
 d4 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/Current", ibra_hosk, "current_nichemapper", "current_nichem", tool="NicheMapper")
 d5 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2021", ibra_hosk, "2021_nichemapper", "2021_nichem", tool="NicheMapper")
 d6 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2042", ibra_hosk, "2042_nichemapper", "2042_nichem", tool="NicheMapper")
+d7 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_Access_1.3", ibra_hosk, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d8 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_HadGEM2-CC", ibra_hosk, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d9 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_ACCESS_1.3", ibra_hosk, "2070_maxent", "2070_maxent", tool="Maxent")
+d10 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_HadGEM2-CC", ibra_hosk, "2070_maxent", "2070_maxent", tool="Maxent")
 
-all_long <- rbind(d1, d2, d3, d4, d5, d6)
-write_csv(all_long, paste0("Climate_briscoe/output/Climate_briscoe_bioregions_hoskings_long.csv"))
+
+all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
+write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_CA/Climate_briscoe_bioregions_hoskings_long.csv"))
 
 all_wide <- all_long %>% select(KLM, STA_CODE, REG_Hoskin, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
-write_csv(all_wide, paste0("Climate_briscoe/output/Climate_briscoe_bioregions_hoskings_wide.csv"))
+write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_CA/Climate_briscoe_bioregions_hoskings_wide.csv"))
+
+#DATA FOR RP SUMMARIES
+d1 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/Current", ibra_states, "current_maxent", "current_maxent", tool="Maxent")
+d2 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_ACCESS_1.3", ibra_states, "2070_maxent", "2070_maxent", tool="Maxent")
+d3 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_HadGEM2-CC", ibra_states, "2070_maxent", "2070_maxent", tool="Maxent")
+d4 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/Current", ibra_states, "current_nichemapper", "current_nichem", tool="NicheMapper")
+d5 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_Access_1.3", ibra_states, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d6 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_HadGEM2-CC", ibra_states, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+
+all_long <- rbind(d1, d2, d3, d4, d5, d6)
+write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_long.csv"))
+
+all_wide <- all_long %>% select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
+write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_wide.csv"))
+
+
 
 ###############
+###############
+#OLD CODE
 #CALCULATE AREA OF KOALA HABITAT THAT WILL BE CLIMATE SUITABLE
 
 #koala habitat map
