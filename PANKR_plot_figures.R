@@ -8,7 +8,7 @@ library(tmap)
 
 setwd("D:/Box Sync/GPEM_Postdoc/Koala_NESP/07_Processing/Output/")
 inpdir <- "Clusters/Test5/"
-oupdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/Reports/Report figures/"
+oupdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/NIKA/Report figures/"
 shpdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/Storymap/shapefiles/"
 currkoaladir <- paste0(dirname(getwd()), "/Data_inp/Koala_Qld_NSW_merge_2000on_1kmres_noDup.shp")
 
@@ -59,9 +59,10 @@ p3 <- tm_shape(region, bbox=nsw_region) +
 tmap_save(p, paste0(oupdir, "Fig_A_Known_a.png"), height=1920, width=1080)
 tmap_save(p2, paste0(oupdir, "Fig_A_Known_b.png"), height=1072, width=1056)
 tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.png"), height=1072, width=716)
-tmap_save(p, paste0(oupdir, "Fig_A_Known_a.eps"), height=1920, width=1080)
-tmap_save(p2, paste0(oupdir, "Fig_A_Known_b.eps"), height=1072, width=1056)
-tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.eps"), height=1072, width=716)
+tmap_save(p, paste0(oupdir, "Fig_A_Known_a.tiff"), height=1920, width=1080)
+tmap_save(p2, paste0(oupdir, "Fig_A_Known_b.tiff"), height=1072, width=1056)
+tmap_save(p3, paste0(oupdir, "Fig_A_Known_c.tiff"), height=1072, width=716)
+
 
 
 ######################
@@ -90,7 +91,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_Ca_Lost_mid.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_Ca_Lost_mid.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_Ca_Lost_mid.tiff"), height=1920, width=1080)
 
 ###Core range, all models
 kdf <- loadRData(paste0(inpdir, "data/","Lost3_scenario_2_clusterthresh_habitat_0ha.Rdata"))
@@ -115,7 +116,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_Cb_Lost_core.tiff"), height=1920, width=1080)
 
 #############################
 #Figure D: Monitoring areas: habitat >10km and >50km from recent sightings (30% coverage)
@@ -144,7 +145,7 @@ p <- tm_shape(region) +
 
 
 tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_D_dist2koala.tiff"), height=1920, width=1080)
 
 
 #############################
@@ -173,7 +174,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_E_extinctkoala.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_E_extnctkoala.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_E_extnctkoala.tiff"), height=1920, width=1080)
 
 #############################
 #Figure F: NIKA under different coverage and habitat thresholds
@@ -199,7 +200,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_F_coverage.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_F_coverage.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_F_coverage.tiff"), height=1920, width=1080)
 
 
 #Plot NIKA under likely and possible habitat thresholds
@@ -220,7 +221,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_F_quality.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_F_quality.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_F_quality.tiff"), height=1920, width=1080)
 
 
 ######################
@@ -247,7 +248,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_B_Climate.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_B_Climate.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_B_Climate.tiff"), height=1920, width=1080)
 
 
 #############################
@@ -271,7 +272,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(b)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_G_nika_climate.tiff"), height=1920, width=1080)
 
 ######################
 #Figure H: NIKA overlaid on current habitat
@@ -292,7 +293,7 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE, title="(a)", title.position = c("LEFT", "TOP"))
 
 tmap_save(p, paste0(oupdir, "Fig_H_Known_a.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_H_Known_a.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_H_Known_a.tiff"), height=1920, width=1080)
 
 
 ######################
@@ -317,5 +318,5 @@ p <- tm_shape(region) +
   tm_layout(frame=FALSE)
 
 tmap_save(p, paste0(oupdir, "Fig_I_Habitat.png"), height=1920, width=1080)
-tmap_save(p, paste0(oupdir, "Fig_I_Habitat.eps"), height=1920, width=1080)
+tmap_save(p, paste0(oupdir, "Fig_I_Habitat.tiff"), height=1920, width=1080)
 
