@@ -44,11 +44,11 @@ thresholds_hosk <- c(0.407, 0.354, 0.291)
 #load HOSKINGS rasters
 
 k_curr <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[1])
-#k_2030 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[2])
-#k_2050 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[3])
+k_2030 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[2])
+k_2050 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[3])
 k_2070 <- raster(list.files("Climate_hoskings/data/asciis/", full.names = TRUE)[4])
-k_2021 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2021_koalarange_interpolated.tif")
-k_2042 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2042_koalarange_interpolated.tif")
+#k_2021 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2021_koalarange_interpolated.tif")
+#k_2042 <- raster("Climate_hoskings/output/Interpolated_koala_climate/Hoskings_2042_koalarange_interpolated.tif")
 # writeRaster(k_2070, "Hoskings_2070_koalarange.tif", datatype='INT4S')
 # writeRaster(k_2050, "Hoskings_2050_koalarange.tif", datatype='INT4S')
 # writeRaster(k_2030, "Hoskings_2030_koalarange.tif", datatype='INT4S')
@@ -105,14 +105,15 @@ thresholdfun <- function(r, shp, thresholds, scenario, climmod, currmod){
 sumfun <- function(shp, oupname, thresholds) {
 
  d1 <- thresholdfun(k_curr, shp, scenario="current", thresholds=thresholds, climmod = "Hosking") 
- d2 <- thresholdfun(k_2021, shp, scenario="yr2021", thresholds=thresholds, climmod = "Hosking") 
- #d3 <- thresholdfun(k_2030, shp, scenario="yr2030", thresholds=thresholds, climmod = "Hosking") 
- d4 <- thresholdfun(k_2042, shp, scenario="yr2042", thresholds=thresholds, climmod = "Hosking") 
- #d5 <- thresholdfun(k_2050, shp, scenario="yr2050", thresholds=thresholds, climmod = "Hosking") 
+ #d2 <- thresholdfun(k_2021, shp, scenario="yr2021", thresholds=thresholds, climmod = "Hosking") 
+ d3 <- thresholdfun(k_2030, shp, scenario="yr2030", thresholds=thresholds, climmod = "Hosking") 
+ #d4 <- thresholdfun(k_2042, shp, scenario="yr2042", thresholds=thresholds, climmod = "Hosking") 
+ d5 <- thresholdfun(k_2050, shp, scenario="yr2050", thresholds=thresholds, climmod = "Hosking") 
  d6 <- thresholdfun(k_2070, shp, scenario="yr2070", thresholds=thresholds, climmod = "Hosking") 
   
   #all_df <- rbind(d1,d2,d3,d4, d5, d6)
-  all_df <- rbind(d1,d2,d4, d6)
+  all_df <- rbind(d1,d3,d5, d6)
+  #all_df <- rbind(d1,d2,d4, d6)
   
   all_wide <- all_df %>% pivot_wider(names_from = scenario, names_prefix = "area_ha_", values_from = area_ha)
   
@@ -187,8 +188,12 @@ d3 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Clima
 d4 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/Current", ibra_states, "current_nichemapper", "current_nichem", tool="NicheMapper")
 d5 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_Access_1.3", ibra_states, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
 d6 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_HadGEM2-CC", ibra_states, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d7 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2030", ibra_states, "2030_nichemapper", "2030_nichem", tool="NicheMapper")
+d8 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2050", ibra_states, "2050_nichemapper", "2050_nichem", tool="NicheMapper")
+d9 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2030", ibra_states, "2030_maxent", "2030_maxent", tool="Maxent")
+d10 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2050", ibra_states, "2050_maxent", "2050_maxent", tool="Maxent")
 
-all_long <- rbind(d1, d2, d3, d4, d5, d6)
+all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
 write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_long.csv"))
 
 all_wide <- all_long %>% select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
@@ -343,33 +348,7 @@ habitatfun <- function(subsname, oupname){
   
   
   
-  
-  %>%
-    mutate(perc_loss_2021 = round(100 - 100* area_ha_yr2021/area_ha_current, 2),
-           perc_loss_2030 = round(100 - 100* area_ha_yr2030/area_ha_current, 2),
-           perc_loss_2042 = round(100 - 100* area_ha_yr2042/area_ha_current, 2),
-           perc_loss_2050 = round(100 - 100* area_ha_yr2050/area_ha_current, 2),
-           perc_loss_2070 = round(100 - 100* area_ha_yr2070/area_ha_current, 2))
-  
-  if(grepl("bioregion",oupname)){
-    states_df <- all_df %>%  select(STA_CODE, scenario, threshold, area_ha) %>%
-      group_by(threshold, STA_CODE, scenario) %>%
-      summarise(area_ha = sum(area_ha)) %>% ungroup() %>%
-      pivot_wider(names_from = scenario, names_prefix = "area_ha_", values_from = area_ha) %>%
-      mutate(perc_loss_2021 = round(100 - 100* area_ha_yr2021/area_ha_current, 2),
-             perc_loss_2030 = round(100 - 100* area_ha_yr2030/area_ha_current, 2),
-             perc_loss_2042 = round(100 - 100* area_ha_yr2042/area_ha_current, 2),
-             perc_loss_2050 = round(100 - 100* area_ha_yr2050/area_ha_current, 2),
-             perc_loss_2070 = round(100 - 100* area_ha_yr2070/area_ha_current, 2))
-    
-    all_wide <- add_row(all_wide, states_df) 
-    all_wide <- all_wide %>% filter(STA_CODE %in% c("ACT", "QLD", "NSW", "SA", "VIC", "JBT"))
-  }
-  write_csv(all_wide, paste0("Climate_hoskings_", oupname, ".csv"))
-  #return(all_wide)  
-  
-  }
-  
+
   
   
   
