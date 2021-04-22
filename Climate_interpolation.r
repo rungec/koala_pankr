@@ -88,5 +88,44 @@ k_2021_niche_med_HAD <- rasterinterpfun(nichestack[["meanTI_poor_med"]], nichest
 k_2021_niche_low_ACC <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Acc70"]], 2021, "NicheM_low_ACC")
 k_2021_niche_low_HAD <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Had70"]], 2021, "NicheM_low_HAD")
 
+#2030
+k_2030_maxent_av_ACC <- rasterinterpfun(maxestack[["mod_averages_current"]], maxestack[["mod_averages_ACCESS1.3_2070"]], 2030, "Maxent_av_ACC")
+k_2030_maxent_av_HAD <- rasterinterpfun(maxestack[["mod_averages_current"]], maxestack[["mod_averages_HadGEM2.CC_2070"]], 2030, "Maxent_av_HAD")
+
+k_2030_maxent_extrA_ACC <- rasterinterpfun(maxestack[["mod_extremesA_current"]], maxestack[["mod_extremesA_ACCESS_1.3_2070"]], 2030, "Maxent_ExtA_ACC")
+k_2030_maxent_extrA_HAD <- rasterinterpfun(maxestack[["mod_extremesA_current"]], maxestack[["mod_extremesA_HadGEM2.CC_2070"]], 2030, "Maxent_ExtA_HAD")
+
+k_2030_maxent_extrB_ACC <- rasterinterpfun(maxestack[["mod_extremesB_current"]], maxestack[["mod_extremesB_ACCESS1.3_2070"]], 2030, "Maxent_ExtB_ACC")
+k_2030_maxent_extrB_HAD <- rasterinterpfun(maxestack[["mod_extremesB_current"]], maxestack[["mod_extremesB_HadGEM2.CC_2070"]], 2030, "Maxent_ExtB_HAD")
+
+k_2030_niche_high_ACC <- rasterinterpfun(nichestack[["meanTI_poor_high"]], nichestack[["meanTI_2070_poor_high_Acc70"]], 2030, "NicheM_high_ACC")
+k_2030_niche_high_HAD <- rasterinterpfun(nichestack[["meanTI_poor_high"]], nichestack[["meanTI_2070_poor_high_Had70"]], 2030, "NicheM_high_HAD")
+
+k_2030_niche_med_ACC <- rasterinterpfun(nichestack[["meanTI_poor_med"]], nichestack[["meanTI_2070_poor_med_Acc70"]], 2030, "NicheM_med_ACC")
+k_2030_niche_med_HAD <- rasterinterpfun(nichestack[["meanTI_poor_med"]], nichestack[["meanTI_2070_poor_med_Had70"]], 2030, "NicheM_med_HAD")
+
+k_2030_niche_low_ACC <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Acc70"]], 2030, "NicheM_low_ACC")
+k_2030_niche_low_HAD <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Had70"]], 2030, "NicheM_low_HAD")
+
+
+####2050
+k_2050_maxent_av_ACC <- rasterinterpfun(maxestack[["mod_averages_current"]], maxestack[["mod_averages_ACCESS1.3_2070"]], 2050, "Maxent_av_ACC")
+k_2050_maxent_av_HAD <- rasterinterpfun(maxestack[["mod_averages_current"]], maxestack[["mod_averages_HadGEM2.CC_2070"]], 2050, "Maxent_av_HAD")
+
+k_2050_maxent_extrA_ACC <- rasterinterpfun(maxestack[["mod_extremesA_current"]], maxestack[["mod_extremesA_ACCESS_1.3_2070"]], 2050, "Maxent_ExtA_ACC")
+k_2050_maxent_extrA_HAD <- rasterinterpfun(maxestack[["mod_extremesA_current"]], maxestack[["mod_extremesA_HadGEM2.CC_2070"]], 2050, "Maxent_ExtA_HAD")
+
+k_2050_maxent_extrB_ACC <- rasterinterpfun(maxestack[["mod_extremesB_current"]], maxestack[["mod_extremesB_ACCESS1.3_2070"]], 2050, "Maxent_ExtB_ACC")
+k_2050_maxent_extrB_HAD <- rasterinterpfun(maxestack[["mod_extremesB_current"]], maxestack[["mod_extremesB_HadGEM2.CC_2070"]], 2050, "Maxent_ExtB_HAD")
+
+k_2050_niche_high_ACC <- rasterinterpfun(nichestack[["meanTI_poor_high"]], nichestack[["meanTI_2070_poor_high_Acc70"]], 2050, "NicheM_high_ACC")
+k_2050_niche_high_HAD <- rasterinterpfun(nichestack[["meanTI_poor_high"]], nichestack[["meanTI_2070_poor_high_Had70"]], 2050, "NicheM_high_HAD")
+
+k_2050_niche_med_ACC <- rasterinterpfun(nichestack[["meanTI_poor_med"]], nichestack[["meanTI_2070_poor_med_Acc70"]], 2050, "NicheM_med_ACC")
+k_2050_niche_med_HAD <- rasterinterpfun(nichestack[["meanTI_poor_med"]], nichestack[["meanTI_2070_poor_med_Had70"]], 2050, "NicheM_med_HAD")
+
+k_2050_niche_low_ACC <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Acc70"]], 2050, "NicheM_low_ACC")
+k_2050_niche_low_HAD <- rasterinterpfun(nichestack[["meanTI_poor_low"]], nichestack[["meanTI_2070_poor_low_Had70"]], 2050, "NicheM_low_HAD")
+
 
 

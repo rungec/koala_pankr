@@ -196,7 +196,7 @@ d10 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated
 all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
 write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_long.csv"))
 
-all_wide <- all_long %>% select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
+all_wide <- all_long %>% dplyr::select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
 write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_wide.csv"))
 
 

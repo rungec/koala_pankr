@@ -15,15 +15,21 @@ brisc_long <- read_csv(paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_bris
 hosk <- hosk %>% filter(threshold==0.407 & KLM %in% c(26, 36)) %>% select(!threshold) %>%
                 group_by(STA_CODE, REG_NAME_7) %>%
                 summarise(area_ha_current = sum(area_ha_current),
+                          area_ha_2030 = sum(area_ha_yr2030),
+                          area_ha_2050 = sum(area_ha_yr2050),
                           area_ha_2070 = sum(area_ha_yr2070)) %>% ungroup()
 
 #add state and whole range summaries
 hosk2 <- hosk %>% group_by(STA_CODE) %>%
   summarise(area_ha_current = sum(area_ha_current),
+            area_ha_2030 = sum(area_ha_2030),
+            area_ha_2050 = sum(area_ha_2050),
             area_ha_2070 = sum(area_ha_2070)) %>%
   mutate(REG_NAME_7="WHOLE_STATE")
 hosk3 <- hosk2 %>% 
   summarise(area_ha_current = sum(area_ha_current),
+            area_ha_2030 = sum(area_ha_2030),
+            area_ha_2050 = sum(area_ha_2050),
             area_ha_2070 = sum(area_ha_2070)) %>%
   mutate(STA_CODE="WHOLE_RANGE", REG_NAME_7="WHOLE_RANGE")
 hoskall <- rbind(hosk, hosk2, hosk3) %>% 
@@ -35,9 +41,13 @@ brisc_long <- brisc_long %>% filter(KLM %in% c(26, 36)) %>% #select known & like
               mutate(year = str_extract(scenario, "[^_]+"),
                      GCM = case_when(str_detect(model, "ACC")==TRUE ~ "ACC",
                                      str_detect(model, "Acc")==TRUE ~ "ACC",
-                                     str_detect(model, "Had")==TRUE ~ "HAD"),
+                                     str_detect(model, "Had")==TRUE ~ "HAD",
+                                     str_detect(model, "HAD")==TRUE ~ "HAD"),
                      model_1 = case_when(str_detect(model, "averages")==TRUE ~ "averages",
+                                          str_detect(model, "_av")==TRUE ~ "averages",
+                                         str_detect(model, "ExtA")==TRUE ~ "extremesA",
                                          str_detect(model, "extremesA")==TRUE ~ "extremesA",
+                                         str_detect(model, "ExtB")==TRUE ~ "extremesB",
                                          str_detect(model, "extremesB")==TRUE ~ "extremesB",
                                          str_detect(model, "high")==TRUE ~ "high",
                                          str_detect(model, "med")==TRUE ~ "med",
@@ -62,15 +72,29 @@ b1curr2 <- b1all %>% filter(year=="current") %>% rename(area_ha_current = area_h
             select(!c(GCM, year)) %>% 
             mutate(model_1 = paste(model_1, "HAD", sep="_"))
 b1curr <- rbind(b1curr, b1curr2)
+b12030 <- b1all %>% filter(year==2030) %>%
+          mutate(model_1 = paste(model_1, GCM, sep="_")) %>% rename(area_ha_2030 = area_ha) %>% 
+          select(!c(GCM, year))
+b12050 <- b1all %>% filter(year==2050) %>%
+          mutate(model_1 = paste(model_1, GCM, sep="_")) %>% rename(area_ha_2050 = area_ha) %>% 
+          select(!c(GCM, year))
 b12070 <- b1all %>% filter(year==2070) %>%
           mutate(model_1 = paste(model_1, GCM, sep="_")) %>% rename(area_ha_2070 = area_ha) %>% 
           select(!c(GCM, year))
  
 ###Join briscoe & hoskings climate estimates
-alldf <- left_join(b1curr, b12070, by=c("STA_CODE", "REG_NAME_7", "model_1")) %>% 
+alldf <- left_join(b1curr, b12030, by=c("STA_CODE", "REG_NAME_7", "model_1")) %>% 
+          left_join(b12050, by=c("STA_CODE", "REG_NAME_7", "model_1")) %>% 
+          left_join(b12070, by=c("STA_CODE", "REG_NAME_7", "model_1")) %>% 
           bind_rows(hoskall) %>% 
-          mutate(perc_loss_historical_to_2070 = round(100 - 100* area_ha_2070/area_ha_current, 2)) %>%
-          mutate(perc_loss_historical_to_2070 = case_when(is.na(perc_loss_historical_to_2070) ~ 0, 
+          mutate(perc_loss_historical_to_2030 = round(100 - 100* area_ha_2030/area_ha_current, 2),
+                  perc_loss_historical_to_2050 = round(100 - 100* area_ha_2050/area_ha_current, 2),
+                  perc_loss_historical_to_2070 = round(100 - 100* area_ha_2070/area_ha_current, 2)) %>%
+          mutate(perc_loss_historical_to_2030 = case_when(is.na(perc_loss_historical_to_2030) ~ 0, 
+                                                          !is.na(perc_loss_historical_to_2030) ~ perc_loss_historical_to_2030),
+                  perc_loss_historical_to_2050 = case_when(is.na(perc_loss_historical_to_2050) ~ 0, 
+                                                          !is.na(perc_loss_historical_to_2050) ~ perc_loss_historical_to_2050),
+                  perc_loss_historical_to_2070 = case_when(is.na(perc_loss_historical_to_2070) ~ 0, 
                                                           !is.na(perc_loss_historical_to_2070) ~ perc_loss_historical_to_2070))
 
 write_csv(alldf, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibra7_merged.csv")
@@ -78,7 +102,13 @@ write_csv(alldf, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibra
 ###Summarise across all 13 models
 
 alldfsumm <- alldf %>% group_by(STA_CODE, REG_NAME_7) %>%
-                      summarise(min_perc_loss_historical_to_2070 = min(perc_loss_historical_to_2070, na.rm=TRUE),
+                      summarise(min_perc_loss_historical_to_2030 = min(perc_loss_historical_to_2030, na.rm=TRUE),
+                                max_perc_loss_historical_to_2030 = max(perc_loss_historical_to_2030, na.rm=TRUE),
+                                median_perc_loss_historical_to_2030 = median(perc_loss_historical_to_2030, na.rm=TRUE),
+                      min_perc_loss_historical_to_2050 = min(perc_loss_historical_to_2050, na.rm=TRUE),
+                                max_perc_loss_historical_to_2050 = max(perc_loss_historical_to_2050, na.rm=TRUE),
+                                median_perc_loss_historical_to_2050 = median(perc_loss_historical_to_2050, na.rm=TRUE),
+                      min_perc_loss_historical_to_2070 = min(perc_loss_historical_to_2070, na.rm=TRUE),
                                 max_perc_loss_historical_to_2070 = max(perc_loss_historical_to_2070, na.rm=TRUE),
                                 median_perc_loss_historical_to_2070 = median(perc_loss_historical_to_2070, na.rm=TRUE))
 
