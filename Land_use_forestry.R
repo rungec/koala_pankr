@@ -93,6 +93,7 @@ write_csv(df, "Forestry/Koala_range_in_landuse_forestry.csv")
 
 #################################
 #Summarise data
+df <- read_csv("Forestry/Koala_range_in_landuse_forestry.csv")
 
 bioreg_df <- read_csv("output/V5_separatenativeforest/bioregion_habitat.csv")
 
@@ -103,5 +104,21 @@ df_s1 <- df %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
   left_join(bioreg_df[,c("STA_CODE", "REG_NAME_7", "likely_range_ha", "likely_habitat_ha")], by=c("STA_CODE"="STA_CODE", "REG_NAME_7"="REG_NAME_7")) 
  
 write_csv(df_s1, "Forestry/Koala_range_in_landuse_forestry_summary.csv")
+
+df_s2 <- df_s1 %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
+  group_by(STA_CODE, koala_habitat) %>%
+  summarise(plantation_forestry_ha = sum(plantation_forestry_ha),
+            native_forestry_ha = sum(native_forestry_ha),
+            likely_range_ha = sum(likely_range_ha), 
+            likely_habitat_ha = sum(likely_habitat_ha)) %>% ungroup()
+write_csv(df_s2, "Forestry/Koala_range_in_landuse_forestry_summary_bystate.csv")
+
+df_s3 <- df_s1 %>% filter(koala_habitat=="likely" & STA_CODE!="VIC") %>%
+  group_by(koala_habitat) %>%
+  summarise(plantation_forestry_ha = sum(plantation_forestry_ha),
+            native_forestry_ha = sum(native_forestry_ha),
+            likely_range_ha = sum(likely_range_ha), 
+            likely_habitat_ha = sum(likely_habitat_ha)) %>% ungroup()
+write_csv(df_s3, "Forestry/Koala_range_in_landuse_forestry_summary_listedrange.csv")
 
 #################################
