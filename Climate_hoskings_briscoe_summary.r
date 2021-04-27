@@ -7,8 +7,8 @@ setwd("D:/Box Sync/DAWE/Climate_change/")
 ###########################
 ###SUMMARISE CLIMATE PROJECTIONS FOR RP (2070)
 #Using 2021 SDM and IBRA7 bioregions
-hosk <- read_csv(paste0("Climate_hoskings/output/V2_2021SDM/Climate_hoskings_bioregions_ibra7.csv"))
-brisc_long <- read_csv(paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_long.csv"))
+hosk <- read_csv(paste0("Climate_hoskings/output/V2_2021SDM/Climate_hoskings_bioregions_ibrawholerange.csv"))
+brisc_long <- read_csv(paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibrawholerange_long.csv"))
 
 ###summarise hoskings climate projection
 #reformat
@@ -97,7 +97,7 @@ alldf <- left_join(b1curr, b12030, by=c("STA_CODE", "REG_NAME_7", "model_1")) %>
                   perc_loss_historical_to_2070 = case_when(is.na(perc_loss_historical_to_2070) ~ 0, 
                                                           !is.na(perc_loss_historical_to_2070) ~ perc_loss_historical_to_2070))
 
-write_csv(alldf, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibra7_merged.csv")
+write_csv(alldf, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibrawholerange_merged.csv")
 
 ###Summarise across all 13 models
 
@@ -112,7 +112,7 @@ alldfsumm <- alldf %>% group_by(STA_CODE, REG_NAME_7) %>%
                                 max_perc_loss_historical_to_2070 = max(perc_loss_historical_to_2070, na.rm=TRUE),
                                 median_perc_loss_historical_to_2070 = median(perc_loss_historical_to_2070, na.rm=TRUE))
 
-write_csv(alldfsumm, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibra7_summary.csv")
+write_csv(alldfsumm, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibrawholerange_summary.csv")
 
 
 

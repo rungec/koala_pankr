@@ -9,14 +9,17 @@ habitatdir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/Habitat_ha
 centroiddir <- "D:/Box Sync/GPEM_Postdoc/Koala_NESP/08_Project_outputs/NIKA/NIKA_inputs/template/koala_templatehexgrid_100ha_centroids.shp"
 
 #range of koala in qld and nsw
-#KLM 26=known, 36=likely, 46=may occur
-krange <- st_read("D:/Box Sync/DAWE/Land_use_change/Koala_SDM/Phascolarctos_cinereus_85104.shp") %>% 
-  st_transform(3577)
+# #KLM 26=known, 36=likely, 46=may occur
+# krange <- st_read("D:/Box Sync/DAWE/Land_use_change/Koala_SDM/Phascolarctos_cinereus_85104.shp") %>% 
+#   st_transform(3577)
 #IBRA bioregions to match hoskings 2012
 ibra_hosk <- st_read("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Bioregions/koala_IBRA7/IBRA7_regions_states_koala_hoskings_2021SDM.shp") %>% 
   st_transform(3577) #%>% dplyr::select("OBJECTID", "STA_CODE", "REG_Hoskin")
-#IBRA7 bioregions
+#IBRA7 bioregions overlaid with 2021 koala SDM
 ibra_states <- st_read("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Bioregions/koala_IBRA7/IBRA7_regions_states_2021SDM.shp") %>% 
+  st_transform(3577) #%>% dplyr::select("OBJECTID", "STA_CODE", "REG_NAME_7")
+#IBRA7 bioregions overlaid with 2021 koala SDM for listed AND unlisted koala
+ibra_wholerange <- st_read("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Bioregions/koala_IBRA7/IBRA7_regions_states_2021SDM_wholerange.shp") %>% 
   st_transform(3577) #%>% dplyr::select("OBJECTID", "STA_CODE", "REG_NAME_7")
 
 #Climate projections
@@ -123,6 +126,7 @@ sumfun <- function(shp, oupname, thresholds) {
 
 ibradf <- sumfun(ibra_hosk, "bioregions_hoskings", thresholds=thresholds_hosk)
 ibra7df <- sumfun(ibra_states, "bioregions_ibra7", thresholds=thresholds_hosk)
+ibrawholedf <- sumfun(ibra_wholerange, "bioregions_ibrawholerange", thresholds=thresholds_hosk)
 #sumfun(krange, "listed_koala", thresholds=thresholds_hosk)
 
 ###############
@@ -199,6 +203,23 @@ write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe
 all_wide <- all_long %>% dplyr::select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha)
 write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibra7_wide.csv"))
 
+#DATA FOR UNLISTED KOALA
+d1 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/Current", ibra_wholerange, "current_maxent", "current_maxent", tool="Maxent")
+d2 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_ACCESS_1.3", ibra_wholerange, "2070_maxent", "2070_maxent", tool="Maxent")
+d3 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/Maxent/2070_HadGEM2-CC", ibra_wholerange, "2070_maxent", "2070_maxent", tool="Maxent")
+d4 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/Current", ibra_wholerange, "current_nichemapper", "current_nichem", tool="NicheMapper")
+d5 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_Access_1.3", ibra_wholerange, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d6 <- briscoe_fun("D:/Box Sync/GPEM_Postdoc/Koala_NESP/04_Datasets/Refugia/Climate_change/NicheMapper/2070_HadGEM2-CC", ibra_wholerange, "2070_nichemapper", "2070_nichem", tool="NicheMapper")
+d7 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2030", ibra_wholerange, "2030_nichemapper", "2030_nichem", tool="NicheMapper")
+d8 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/NicheMapper_2050", ibra_wholerange, "2050_nichemapper", "2050_nichem", tool="NicheMapper")
+d9 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2030", ibra_wholerange, "2030_maxent", "2030_maxent", tool="Maxent")
+d10 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2050", ibra_wholerange, "2050_maxent", "2050_maxent", tool="Maxent")
+
+all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
+write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibrawholerange_long.csv"))
+
+all_wide <- all_long %>% dplyr::select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha) %>% ungroup()
+write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibrawholerange_wide.csv"))
 
 
 ###############
