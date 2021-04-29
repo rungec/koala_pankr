@@ -37,7 +37,7 @@ hoskall <- rbind(hosk, hosk2, hosk3) %>%
 
 ###summarise briscoe climate projection
 #reformat
-brisc_long <- brisc_long %>% filter(KLM %in% c(26, 36)) %>% #select known & likely range
+brisc_long <- brisc_long %>% filter(KLM %in% c(26, 36)) %>% #select known & likely range 
               mutate(year = str_extract(scenario, "[^_]+"),
                      GCM = case_when(str_detect(model, "ACC")==TRUE ~ "ACC",
                                      str_detect(model, "Acc")==TRUE ~ "ACC",
@@ -110,7 +110,8 @@ alldfsumm <- alldf %>% group_by(STA_CODE, REG_NAME_7) %>%
                                 median_perc_loss_historical_to_2050 = median(perc_loss_historical_to_2050, na.rm=TRUE),
                       min_perc_loss_historical_to_2070 = min(perc_loss_historical_to_2070, na.rm=TRUE),
                                 max_perc_loss_historical_to_2070 = max(perc_loss_historical_to_2070, na.rm=TRUE),
-                                median_perc_loss_historical_to_2070 = median(perc_loss_historical_to_2070, na.rm=TRUE))
+                                median_perc_loss_historical_to_2070 = median(perc_loss_historical_to_2070, na.rm=TRUE),
+                      num_models_currently_lessthan_1000ha_suitable = sum(area_ha_current<1000))
 
 write_csv(alldfsumm, "Aggregated_summaries/V2_2021SDM_RP/Climate_all_bioregions_ibrawholerange_summary.csv")
 

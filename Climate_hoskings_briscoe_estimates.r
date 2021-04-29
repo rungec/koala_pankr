@@ -215,10 +215,11 @@ d8 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/
 d9 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2030", ibra_wholerange, "2030_maxent", "2030_maxent", tool="Maxent")
 d10 <- briscoe_fun("D:/Box Sync/DAWE/Climate_change/Climate_briscoe/Interpolated/Maxent_2050", ibra_wholerange, "2050_maxent", "2050_maxent", tool="Maxent")
 
-all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10)
+all_long <- rbind(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10) %>% group_by(STA_CODE, REG_NAME_7, KLM, scenario, model, threshold) %>%
+            summarise(area_ha=area_ha) %>% ungroup()
 write_csv(all_long, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibrawholerange_long.csv"))
 
-all_wide <- all_long %>% dplyr::select(KLM, STA_CODE, REG_NAME_7, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha) %>% ungroup()
+all_wide <- all_long %>% dplyr::select(KLM, STA_CODE, REG_NAME_7, scenario, threshold, model, area_ha) %>% pivot_wider(names_from = model, names_prefix = "area_ha_", values_from = area_ha) %>% ungroup()
 write_csv(all_wide, paste0("Climate_briscoe/output/V2_2021SDM_RP/Climate_briscoe_bioregions_ibrawholerange_wide.csv"))
 
 
